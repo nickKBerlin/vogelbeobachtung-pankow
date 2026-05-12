@@ -21,7 +21,8 @@
       --color-surface-offset:#f3f0ec;--color-border:#d4d1ca;--color-divider:#dcd9d5;
       --color-text:#28251d;--color-text-muted:#6e6d67;--color-text-faint:#9d9b94;
       --color-primary:#01696f;--color-primary-hover:#0c4e54;--color-primary-highlight:#cedcd8;
-      --color-warning:#964219;
+      --color-warning:#964219;--color-error:#c0392b;--color-error-bg:#fdf0ee;
+      --color-error-border:#e8b4ae;
       --radius-sm:.5rem;--radius-md:.75rem;--radius-lg:1rem;--radius-xl:1.25rem;--radius-full:9999px;
       --shadow-sm:0 1px 2px rgba(0,0,0,.06);--shadow-md:0 10px 30px rgba(0,0,0,.08);
       --transition:180ms cubic-bezier(.16,1,.3,1);
@@ -32,7 +33,8 @@
       --color-surface-offset:#242320;--color-border:#393836;--color-divider:#2b2926;
       --color-text:#e0dfdc;--color-text-muted:#a4a29c;--color-text-faint:#7d7a74;
       --color-primary:#4f98a3;--color-primary-hover:#227f8b;--color-primary-highlight:#313b3b;
-      --color-warning:#c57a54;
+      --color-warning:#c57a54;--color-error:#e57060;--color-error-bg:#2a1a18;
+      --color-error-border:#5a2a24;
       --shadow-sm:0 1px 2px rgba(0,0,0,.25);--shadow-md:0 10px 30px rgba(0,0,0,.35);
     }
     *{box-sizing:border-box}
@@ -55,8 +57,14 @@
     .stack{display:grid;gap:var(--space-4)}
     .field{display:grid;gap:.45rem}
     .field label{font-size:var(--text-sm);font-weight:700}
+    .field .required-star{color:var(--color-error);margin-left:.2em}
     .input,select,textarea{width:100%;border-radius:var(--radius-md);border:1px solid var(--color-border);background:var(--color-surface-2);padding:.9rem 1rem;min-height:48px}
     textarea{min-height:96px;resize:vertical}
+    .input.error,select.error{border-color:var(--color-error)!important;background:var(--color-error-bg)}
+    .field-error{font-size:var(--text-xs);color:var(--color-error);display:none}
+    .field-error.visible{display:block}
+    .validation-banner{background:var(--color-error-bg);border:1px solid var(--color-error-border);border-radius:var(--radius-md);padding:.75rem 1rem;font-size:var(--text-sm);color:var(--color-error);display:none}
+    .validation-banner.visible{display:block}
     .segmented{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-2)}
     .segmented button,.chip{min-height:48px;border-radius:var(--radius-md);padding:.8rem 1rem;background:var(--color-surface-2);border:1px solid var(--color-border);font-weight:700}
     .segmented button.active,.chip.active{background:var(--color-primary-highlight);color:var(--color-primary);border-color:color-mix(in srgb,var(--color-primary) 30%,var(--color-border))}
@@ -108,17 +116,17 @@
 <body>
 <div class="app">
   <div class="topbar">
-    <button class="icon-btn hidden" id="backBtn" aria-label="Zurück">←</button>
+    <button class="icon-btn hidden" id="backBtn" aria-label="Zur&uuml;ck">&larr;</button>
     <h1 id="topTitle">Vogelbeobachtung</h1>
     <div class="grow"></div>
-    <button class="icon-btn" id="themeToggle" aria-label="Farbschema wechseln">◐</button>
+    <button class="icon-btn" id="themeToggle" aria-label="Farbschema wechseln">&#9680;</button>
   </div>
 
   <!-- SCREEN 1 -->
   <section class="screen active" data-screen="home">
     <div class="hero">
-      <span class="eyebrow">Grüner Kiez Pankow</span>
-      <h2>Vogeldokumentation Grüner Kiez Pankow</h2>
+      <span class="eyebrow">Gr&uuml;ner Kiez Pankow</span>
+      <h2>Vogeldokumentation Gr&uuml;ner Kiez Pankow</h2>
       <p>Beobachtungen schnell erfassen und als PDF exportieren.</p>
     </div>
     <div class="stack" style="margin-top:1.5rem">
@@ -136,81 +144,90 @@
         <h2 style="font-size:var(--text-xl);margin:.75rem 0 .35rem">Neue Erfassung</h2>
         <p class="muted">Datum, Uhrzeit, Hof, Wetter und Beobachter eingeben.</p>
       </div>
+      <div id="validationBanner" class="validation-banner">
+        Bitte alle Pflichtfelder ausf&uuml;llen (mit <span style="color:var(--color-error)">*</span> markiert).
+      </div>
       <div class="panel stack">
         <div class="field">
           <label for="date">Datum</label>
-          <input id="date" class="input" type="date" value="2026-05-12">
-          <div class="hint" id="dateDisplay">12.05.2026</div>
+          <input id="date" class="input" type="date">
+          <div class="hint" id="dateDisplay"></div>
         </div>
         <div class="field">
-          <label for="time">Uhrzeit</label>
-          <input id="time" class="input" type="time" value="14:30">
-          <div class="hint">24-Stunden-Format, z. B. 18:30</div>
+          <label for="time">Startzeit</label>
+          <input id="time" class="input" type="time">
+          <div class="hint">24-Stunden-Format, z.&thinsp;B. 18:30</div>
         </div>
         <div class="field">
           <label>Hof</label>
           <div class="segmented" id="courtyardSelect">
-            <button type="button" class="active" data-court="suedhof">Südhof</button>
+            <button type="button" class="active" data-court="suedhof">S&uuml;dhof</button>
             <button type="button" data-court="nordhof">Nordhof</button>
           </div>
         </div>
         <div class="field">
-          <label for="temp">Temperatur</label>
+          <label for="temp">Temperatur <span class="required-star">*</span></label>
           <div style="display:flex;gap:.5rem;align-items:center">
-            <input id="temp" class="input" type="number" value="16" style="flex:1">
-            <span style="font-weight:700;padding:.9rem .5rem">°C</span>
+            <input id="temp" class="input" type="number" placeholder="z.&thinsp;B. 16" style="flex:1">
+            <span style="font-weight:700;padding:.9rem .5rem">&deg;C</span>
           </div>
+          <div class="field-error" id="tempError">Bitte Temperatur eingeben.</div>
         </div>
         <div class="field">
-          <label for="wind">Wind</label>
+          <label for="wind">Wind <span class="required-star">*</span></label>
           <select id="wind">
+            <option value="">-- bitte w&auml;hlen --</option>
             <option>windstill</option>
-            <option selected>schwach</option>
-            <option>mäßig</option>
+            <option>schwach</option>
+            <option>m&auml;&szlig;ig</option>
             <option>stark</option>
           </select>
+          <div class="field-error" id="windError">Bitte Windst&auml;rke w&auml;hlen.</div>
         </div>
         <div class="field">
-          <label for="weather">Sonne / Niederschlag</label>
+          <label for="weather">Sonne / Niederschlag <span class="required-star">*</span></label>
           <select id="weather">
+            <option value="">-- bitte w&auml;hlen --</option>
             <option>sonnig</option>
-            <option selected>leicht bewölkt</option>
-            <option>bewölkt</option>
+            <option>leicht bew&ouml;lkt</option>
+            <option>bew&ouml;lkt</option>
             <option>Regen</option>
             <option>wechselhaft</option>
           </select>
+          <div class="field-error" id="weatherError">Bitte Wetterlage w&auml;hlen.</div>
         </div>
         <div class="field">
-          <label for="observer">Erfassung durch</label>
-          <input id="observer" class="input" type="text" value="Kiez-Team">
+          <label for="observer">Erfassung durch <span class="required-star">*</span></label>
+          <input id="observer" class="input" type="text" placeholder="Name oder Gruppe">
+          <div class="field-error" id="observerError">Bitte Namen eingeben.</div>
         </div>
         <div class="field">
-          <label for="notes">Besonderheiten / Bemerkungen</label>
-          <textarea id="notes">Ruhiger Nachmittag, gute Sicht im südlichen Gartenbereich.</textarea>
+          <label for="notes">Besonderheiten / Bemerkungen <span style="color:var(--color-text-muted);font-weight:400">(optional)</span></label>
+          <textarea id="notes" placeholder="z.&thinsp;B. ruhiger Nachmittag, gute Sicht im s&uuml;dlichen Gartenbereich"></textarea>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- SCREEN 3: Übersicht -->
+  <!-- SCREEN 3: &Uuml;bersicht -->
   <section class="screen" data-screen="survey-overview">
     <div class="stack">
       <div>
         <span class="eyebrow">Screen 3</span>
-        <h2 style="font-size:var(--text-xl);margin:.75rem 0 .35rem">Erfassung vom <span id="overviewDate">12.05.2026</span></h2>
-        <p class="muted"><span id="courtLabel">Südhof</span> · <span id="overviewTime">14:30</span> Uhr</p>
+        <h2 style="font-size:var(--text-xl);margin:.75rem 0 .35rem">Erfassung vom <span id="overviewDate"></span></h2>
+        <p class="muted"><span id="courtLabel">S&uuml;dhof</span> &middot; <span id="overviewTime"></span> Uhr</p>
       </div>
       <div class="mini-stats">
         <div class="stat"><span class="hint">Beobachtungen</span><strong id="obsCount">0</strong></div>
-        <div class="stat"><span class="hint">Hof</span><strong id="courtLabelMini">Südhof</strong></div>
-        <div class="stat"><span class="hint">Temperatur</span><strong id="tempDisplay">16°C</strong></div>
+        <div class="stat"><span class="hint">Hof</span><strong id="courtLabelMini">S&uuml;dhof</strong></div>
+        <div class="stat"><span class="hint">Temperatur</span><strong id="tempDisplay">&mdash;</strong></div>
       </div>
       <div class="panel list-plain">
-        <div class="list-item"><span>Datum</span><strong id="summaryDate">12.05.2026</strong></div>
-        <div class="list-item"><span>Uhrzeit</span><strong id="summaryTime">14:30</strong></div>
-        <div class="list-item"><span>Wind</span><strong id="summaryWind">schwach</strong></div>
-        <div class="list-item"><span>Sonne / Niederschlag</span><strong id="summaryWeather">leicht bewölkt</strong></div>
-        <div class="list-item"><span>Erfassung durch</span><strong id="summaryObserver">Kiez-Team</strong></div>
+        <div class="list-item"><span>Datum</span><strong id="summaryDate"></strong></div>
+        <div class="list-item"><span>Startzeit</span><strong id="summaryTime"></strong></div>
+        <div class="list-item"><span>Wind</span><strong id="summaryWind"></strong></div>
+        <div class="list-item"><span>Sonne / Niederschlag</span><strong id="summaryWeather"></strong></div>
+        <div class="list-item"><span>Erfassung durch</span><strong id="summaryObserver"></strong></div>
       </div>
       <div class="map-card">
         <div class="map-toolbar">
@@ -225,9 +242,9 @@
         <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem">
           <div>
             <h3 style="margin:0;font-size:var(--text-lg)">Beobachtungen</h3>
-            <p class="muted" style="margin:.2rem 0 0">Nummerierte Liste aller Einträge.</p>
+            <p class="muted" style="margin:.2rem 0 0">Nummerierte Liste aller Eintr&auml;ge.</p>
           </div>
-          <button class="secondary nav" data-target="observation-form">Hinzufügen</button>
+          <button class="secondary nav" data-target="observation-form">Hinzuf&uuml;gen</button>
         </div>
         <div class="card-list" id="observationList"></div>
       </div>
@@ -239,25 +256,25 @@
     <div class="stack">
       <div>
         <span class="eyebrow">Screen 4</span>
-        <h2 style="font-size:var(--text-xl);margin:.75rem 0 .35rem">Beobachtung hinzufügen</h2>
+        <h2 style="font-size:var(--text-xl);margin:.75rem 0 .35rem">Beobachtung hinzuf&uuml;gen</h2>
         <p class="muted">Art, Anzahl, Geschlecht, Verhalten und Beschreibung eingeben.</p>
       </div>
       <div class="panel stack">
         <div class="field">
           <label for="species">Art</label>
           <select id="species">
-            <option value="H">H – Haussperling</option>
-            <option value="Bm">Bm – Blaumeise</option>
-            <option value="K">K – Kohlmeise</option>
-            <option value="Wb">Wb – Waldbaumläufer</option>
-            <option value="KL">KL – Kleiber</option>
-            <option value="Bs">Bs – Buntspecht</option>
-            <option value="Gü">Gü – Grünspecht</option>
-            <option value="R">R – Rotkehlchen</option>
-            <option value="S" selected>S – Star</option>
-            <option value="E">E – Elster</option>
-            <option value="Rt">Rt – Ringeltaube</option>
-            <option value="Nk">Nk – Nebelkrähe</option>
+            <option value="H">H &ndash; Haussperling</option>
+            <option value="Bm">Bm &ndash; Blaumeise</option>
+            <option value="K">K &ndash; Kohlmeise</option>
+            <option value="Wb">Wb &ndash; Waldbauml&auml;ufer</option>
+            <option value="KL">KL &ndash; Kleiber</option>
+            <option value="Bs">Bs &ndash; Buntspecht</option>
+            <option value="G&uuml;">G&uuml; &ndash; Gr&uuml;nspecht</option>
+            <option value="R">R &ndash; Rotkehlchen</option>
+            <option value="S" selected>S &ndash; Star</option>
+            <option value="E">E &ndash; Elster</option>
+            <option value="Rt">Rt &ndash; Ringeltaube</option>
+            <option value="Nk">Nk &ndash; Nebelkr&auml;he</option>
           </select>
         </div>
         <div class="btn-row">
@@ -269,7 +286,7 @@
             <label for="sex">Geschlecht</label>
             <select id="sex">
               <option>nicht erkannt</option>
-              <option>Männchen</option>
+              <option>M&auml;nnchen</option>
               <option>Weibchen</option>
               <option>gemischtes Paar</option>
             </select>
@@ -285,16 +302,16 @@
             <button type="button" class="chip">Nestbau</button>
             <button type="button" class="chip">Brutnachweis</button>
             <button type="button" class="chip">Flugbewegung</button>
-            <button type="button" class="chip">Füttern</button>
+            <button type="button" class="chip">F&uuml;ttern</button>
           </div>
         </div>
         <div class="field">
           <label for="locationText">Wo beobachtet?</label>
-          <input id="locationText" class="input" type="text" placeholder="z. B. Konzertwiese, Gebüsch Ossietzkystr. 26">
+          <input id="locationText" class="input" type="text" placeholder="z.&thinsp;B. Konzertwiese, Geb&uuml;sch Ossietzkystr. 26">
         </div>
         <div class="field">
-          <label for="obsText">Was beobachtet / gehört?</label>
-          <textarea id="obsText" placeholder="z. B. singt, fliegt, pickt Nahrung, balzt"></textarea>
+          <label for="obsText">Was beobachtet / geh&ouml;rt?</label>
+          <textarea id="obsText" placeholder="z.&thinsp;B. singt, fliegt, pickt Nahrung, balzt"></textarea>
         </div>
       </div>
     </div>
@@ -306,36 +323,36 @@
       <div>
         <span class="eyebrow">Screen 5</span>
         <h2 style="font-size:var(--text-xl);margin:.75rem 0 .35rem">Ort auf Karte markieren</h2>
-        <p class="muted">Tippe auf die Karte, um den Beobachtungsort zu setzen. Verschiebbar bis „Ort übernehmen".</p>
+        <p class="muted">Tippe auf die Karte, um den Beobachtungsort zu setzen. Verschiebbar bis &bdquo;Ort &uuml;bernehmen&ldquo;.</p>
       </div>
       <div class="panel stack success">
         <div><strong>Aktuelle Beobachtung</strong></div>
-        <div class="hint" id="currentObsSummary">— noch keine Angaben —</div>
+        <div class="hint" id="currentObsSummary">&mdash; noch keine Angaben &mdash;</div>
       </div>
       <div class="map-card">
         <div class="map-toolbar">
-          <strong id="mapTitle">Südhof-Karte</strong>
+          <strong id="mapTitle">S&uuml;dhof-Karte</strong>
           <span class="badge">Tippen zum Markieren</span>
         </div>
         <div class="map" id="interactiveMap"></div>
         <div class="field">
           <label for="mapLocationText">Ortsbeschreibung</label>
-          <input id="mapLocationText" class="input" type="text" placeholder="z. B. Konzertwiese, Gebüsch Ossietzkystr. 26">
+          <input id="mapLocationText" class="input" type="text" placeholder="z.&thinsp;B. Konzertwiese, Geb&uuml;sch Ossietzkystr. 26">
         </div>
         <div class="field">
           <label for="movementText">Flugbewegung (optional)</label>
-          <input id="movementText" class="input" type="text" placeholder="z. B. von Kavalierstraße 25 Richtung Gartenbereich">
+          <input id="movementText" class="input" type="text" placeholder="z.&thinsp;B. von Kavalierstra&szlig;e 25 Richtung Gartenbereich">
         </div>
       </div>
     </div>
   </section>
 
-  <!-- SCREEN 6: Prüfen -->
+  <!-- SCREEN 6: Pr&uuml;fen -->
   <section class="screen" data-screen="review-save">
     <div class="stack">
       <div>
         <span class="eyebrow">Screen 6</span>
-        <h2 style="font-size:var(--text-xl);margin:.75rem 0 .35rem">Prüfen und speichern</h2>
+        <h2 style="font-size:var(--text-xl);margin:.75rem 0 .35rem">Pr&uuml;fen und speichern</h2>
         <p class="muted">Zusammenfassung vor dem Speichern.</p>
       </div>
       <div class="panel stack" id="reviewPanel"></div>
@@ -348,26 +365,34 @@
       <div>
         <span class="eyebrow">Screen 7</span>
         <h2 style="font-size:var(--text-xl);margin:.75rem 0 .35rem">PDF-Export vorbereiten</h2>
-        <p class="muted">Kopfdaten + Beobachtungstabelle + Karte mit Nummern als separater Anhang.</p>
+        <p class="muted">Endzeit eingeben, dann Kopfdaten und Tabelle pr&uuml;fen.</p>
+      </div>
+      <div class="panel stack">
+        <div class="field">
+          <label for="endTime">Endzeit der Erfassung <span class="required-star">*</span></label>
+          <input id="endTime" class="input" type="time">
+          <div class="hint">Wann wurde die Erfassung beendet?</div>
+        </div>
       </div>
       <div class="preview-sheet">
-        <h3>Vogeldokumentation „Grüner Kiez Pankow" 2026</h3>
+        <h3>Vogeldokumentation &bdquo;Gr&uuml;ner Kiez Pankow&ldquo; 2026</h3>
         <div class="list-plain">
-          <div class="list-item"><span>Datum</span><strong id="pdfDate">12.05.2026</strong></div>
-          <div class="list-item"><span>Uhrzeit</span><strong id="pdfTime">14:30</strong></div>
-          <div class="list-item"><span>Ort</span><strong id="pdfCourt">Südhof</strong></div>
-          <div class="list-item"><span>Temperatur</span><strong id="pdfTemp">16°C</strong></div>
-          <div class="list-item"><span>Wind</span><strong id="pdfWind">schwach</strong></div>
-          <div class="list-item"><span>Sonne / Niederschlag</span><strong id="pdfWeather">leicht bewölkt</strong></div>
-          <div class="list-item"><span>Erfassung durch</span><strong id="pdfObserver">Kiez-Team</strong></div>
+          <div class="list-item"><span>Datum</span><strong id="pdfDate"></strong></div>
+          <div class="list-item"><span>Startzeit</span><strong id="pdfTime"></strong></div>
+          <div class="list-item"><span>Endzeit</span><strong id="pdfEndTime">&mdash;</strong></div>
+          <div class="list-item"><span>Ort</span><strong id="pdfCourt">S&uuml;dhof</strong></div>
+          <div class="list-item"><span>Temperatur</span><strong id="pdfTemp"></strong></div>
+          <div class="list-item"><span>Wind</span><strong id="pdfWind"></strong></div>
+          <div class="list-item"><span>Sonne / Niederschlag</span><strong id="pdfWeather"></strong></div>
+          <div class="list-item"><span>Erfassung durch</span><strong id="pdfObserver"></strong></div>
         </div>
         <table class="preview-table">
           <thead>
-            <tr><th>#</th><th>Art</th><th>Anzahl·Geschlecht</th><th>Wo beobachtet?</th><th>Was beobachtet/gehört?</th></tr>
+            <tr><th>#</th><th>Art</th><th>Anzahl&middot;Geschlecht</th><th>Wo beobachtet?</th><th>Was beobachtet/geh&ouml;rt?</th></tr>
           </thead>
           <tbody id="previewRows"></tbody>
         </table>
-        <div class="hint">+ Kartenanhang mit grünen Nummern wird als letzte Seite angehängt.</div>
+        <div class="hint">+ Kartenanhang mit gr&uuml;nen Nummern wird als letzte Seite angeh&auml;ngt.</div>
       </div>
     </div>
   </section>
@@ -381,7 +406,7 @@
       </div>
       <div class="panel stack success">
         <div><strong>PDF wurde heruntergeladen</strong></div>
-        <div class="muted" id="exportFilename">vogeldokumentation-2026-05-12-suedhof.pdf</div>
+        <div class="muted" id="exportFilename">vogeldokumentation.pdf</div>
         <div class="btn-row">
           <button class="secondary nav" data-target="home">Zur Startseite</button>
           <button class="primary nav" data-target="new-survey">Neue Erfassung</button>
@@ -394,11 +419,19 @@
 </div>
 
 <script>
-// Exact filenames as uploaded to the repo
 const MAP_IMAGES = {
   suedhof: '2026_Karte_S\u00fcdhof.webp',
   nordhof: '2026_Karte_Nordhof.webp'
 };
+
+function currentTimeHHMM() {
+  const now = new Date();
+  return now.toTimeString().slice(0,5);
+}
+function todayISO() {
+  const now = new Date();
+  return now.toISOString().slice(0,10);
+}
 
 const state = {
   screen: 'home',
@@ -415,7 +448,7 @@ const ctaBar   = document.getElementById('ctaBar');
 const titles = {
   home:'Vogelbeobachtung','new-survey':'Neue Erfassung',
   'survey-overview':'Erfassung','observation-form':'Beobachtung',
-  'map-screen':'Karte','review-save':'Prüfen',
+  'map-screen':'Karte','review-save':'Pr\u00fcfen',
   'export-preview':'PDF-Vorschau','export-done':'Export'
 };
 const backMap = {
@@ -425,15 +458,70 @@ const backMap = {
 };
 const ctas = {
   home:'',
-  'new-survey':`<button class="secondary nav" data-target="home">Abbrechen</button><button class="primary nav" data-target="survey-overview">Erfassung starten</button>`,
-  'survey-overview':`<button class="secondary nav" data-target="export-preview">PDF exportieren</button><button class="primary nav" data-target="observation-form">Beobachtung hinzufügen</button>`,
-  'observation-form':`<button class="secondary nav" data-target="survey-overview">Zurück</button><button class="primary nav" data-target="map-screen">Weiter zur Karte</button>`,
-  'map-screen':`<button class="secondary nav" data-target="observation-form">Zurück</button><button class="primary" id="confirmLocation">Ort übernehmen</button>`,
+  'new-survey':`<button class="secondary nav" data-target="home">Abbrechen</button><button class="primary" id="startSurveyBtn">Erfassung starten</button>`,
+  'survey-overview':`<button class="secondary nav" data-target="export-preview">PDF exportieren</button><button class="primary nav" data-target="observation-form">Beobachtung hinzuf\u00fcgen</button>`,
+  'observation-form':`<button class="secondary nav" data-target="survey-overview">Zur\u00fcck</button><button class="primary nav" data-target="map-screen">Weiter zur Karte</button>`,
+  'map-screen':`<button class="secondary nav" data-target="observation-form">Zur\u00fcck</button><button class="primary" id="confirmLocation">Ort \u00fcbernehmen</button>`,
   'review-save':`<button class="secondary nav" data-target="map-screen">Ort bearbeiten</button><button class="primary" id="saveObservation">Jetzt speichern</button>`,
-  'export-preview':`<button class="secondary nav" data-target="survey-overview">Zurück</button><button class="primary" id="generatePdf">PDF erzeugen</button>`,
-  'export-done':`<button class="secondary nav" data-target="home">Zur Übersicht</button><button class="primary nav" data-target="new-survey">Neue Erfassung</button>`
+  'export-preview':`<button class="secondary nav" data-target="survey-overview">Zur\u00fcck</button><button class="primary" id="generatePdf">PDF erzeugen</button>`,
+  'export-done':`<button class="secondary nav" data-target="home">Zur \u00dcbersicht</button><button class="primary nav" data-target="new-survey">Neue Erfassung</button>`
 };
 
+// --- Validation ---
+const REQUIRED = [
+  { id:'temp',    errId:'tempError' },
+  { id:'wind',    errId:'windError' },
+  { id:'weather', errId:'weatherError' },
+  { id:'observer',errId:'observerError' }
+];
+
+function validateSurveyForm() {
+  let valid = true;
+  REQUIRED.forEach(({ id, errId }) => {
+    const el = document.getElementById(id);
+    const err = document.getElementById(errId);
+    const empty = !el.value.trim();
+    el.classList.toggle('error', empty);
+    if (err) err.classList.toggle('visible', empty);
+    if (empty) valid = false;
+  });
+  const banner = document.getElementById('validationBanner');
+  if (banner) banner.classList.toggle('visible', !valid);
+  return valid;
+}
+
+function clearValidation() {
+  REQUIRED.forEach(({ id, errId }) => {
+    document.getElementById(id)?.classList.remove('error');
+    document.getElementById(errId)?.classList.remove('visible');
+  });
+  document.getElementById('validationBanner')?.classList.remove('visible');
+}
+
+// Remove error state on input
+REQUIRED.forEach(({ id, errId }) => {
+  document.getElementById(id)?.addEventListener('input', () => {
+    const el = document.getElementById(id);
+    if (el.value.trim()) {
+      el.classList.remove('error');
+      document.getElementById(errId)?.classList.remove('visible');
+      // hide banner if all clear
+      const anyLeft = REQUIRED.some(r => !document.getElementById(r.id)?.value.trim());
+      if (!anyLeft) document.getElementById('validationBanner')?.classList.remove('visible');
+    }
+  });
+  document.getElementById(id)?.addEventListener('change', () => {
+    const el = document.getElementById(id);
+    if (el.value.trim()) {
+      el.classList.remove('error');
+      document.getElementById(errId)?.classList.remove('visible');
+      const anyLeft = REQUIRED.some(r => !document.getElementById(r.id)?.value.trim());
+      if (!anyLeft) document.getElementById('validationBanner')?.classList.remove('visible');
+    }
+  });
+});
+
+// --- Helpers ---
 function formatDate(iso){
   if(!iso) return '';
   const [y,m,d]=iso.split('-');
@@ -454,7 +542,7 @@ function renderOverviewMap(container){
   const img=document.createElement('img');
   img.className='map-bg';
   img.src=MAP_IMAGES[state.courtyard];
-  img.alt=state.courtyard==='suedhof'?'Südhof-Karte':'Nordhof-Karte';
+  img.alt=state.courtyard==='suedhof'?'S\u00fcdhof-Karte':'Nordhof-Karte';
   container.appendChild(img);
   state.observations.forEach((obs,i)=>{
     if(obs.x!=null && obs.y!=null){
@@ -468,22 +556,17 @@ function renderInteractiveMap(container){
   const img=document.createElement('img');
   img.className='map-bg';
   img.src=MAP_IMAGES[state.courtyard];
-  img.alt=state.courtyard==='suedhof'?'Südhof-Karte':'Nordhof-Karte';
+  img.alt=state.courtyard==='suedhof'?'S\u00fcdhof-Karte':'Nordhof-Karte';
   container.appendChild(img);
-
-  // All saved observations (green, fixed)
   state.observations.forEach((obs,i)=>{
     if(obs.x!=null && obs.y!=null){
       container.appendChild(buildPin(i+1, obs.x, obs.y));
     }
   });
-
-  // Pending marker (orange, next number)
   const nextNum = state.observations.length+1;
   if(state.pendingMarker){
     container.appendChild(buildPin(nextNum, state.pendingMarker.x, state.pendingMarker.y, true));
   }
-
   container.onclick=(e)=>{
     const r=container.getBoundingClientRect();
     const x=Math.max(3,Math.min(97,((e.clientX-r.left)/r.width)*100));
@@ -496,22 +579,25 @@ function renderInteractiveMap(container){
 function set(id,val){const el=document.getElementById(id);if(el)el.textContent=val;}
 
 function updateSummaryFields(){
-  const dateVal =document.getElementById('date').value;
-  const timeVal =document.getElementById('time').value;
-  const tempVal =document.getElementById('temp').value;
-  const windVal =document.getElementById('wind').value;
-  const weatherVal=document.getElementById('weather').value;
-  const obsVal  =document.getElementById('observer').value;
+  const dateVal  = document.getElementById('date').value;
+  const timeVal  = document.getElementById('time').value;
+  const tempVal  = document.getElementById('temp').value;
+  const windVal  = document.getElementById('wind').value;
+  const weatherVal = document.getElementById('weather').value;
+  const obsVal   = document.getElementById('observer').value;
+  const endVal   = document.getElementById('endTime')?.value || '';
   const fmt=formatDate(dateVal);
   set('dateDisplay',fmt); set('overviewDate',fmt); set('summaryDate',fmt); set('pdfDate',fmt);
   set('overviewTime',timeVal); set('summaryTime',timeVal); set('pdfTime',timeVal);
-  set('tempDisplay',tempVal+'°C'); set('pdfTemp',tempVal+'°C');
-  set('summaryWind',windVal); set('pdfWind',windVal);
-  set('summaryWeather',weatherVal); set('pdfWeather',weatherVal);
-  set('summaryObserver',obsVal); set('pdfObserver',obsVal);
-  const court=state.courtyard==='suedhof'?'Südhof':'Nordhof';
+  set('tempDisplay', tempVal ? tempVal+'\u00b0C' : '\u2014');
+  set('pdfTemp', tempVal ? tempVal+'\u00b0C' : '\u2014');
+  set('summaryWind',windVal||'\u2014'); set('pdfWind',windVal||'\u2014');
+  set('summaryWeather',weatherVal||'\u2014'); set('pdfWeather',weatherVal||'\u2014');
+  set('summaryObserver',obsVal||'\u2014'); set('pdfObserver',obsVal||'\u2014');
+  set('pdfEndTime', endVal || '\u2014');
+  const court=state.courtyard==='suedhof'?'S\u00fcdhof':'Nordhof';
   set('courtLabel',court); set('courtLabelMini',court); set('pdfCourt',court);
-  set('exportFilename',`vogeldokumentation-${dateVal||'2026-05-12'}-${state.courtyard}.pdf`);
+  set('exportFilename',`vogeldokumentation-${dateVal||todayISO()}-${state.courtyard}.pdf`);
 }
 
 function renderObservations(){
@@ -523,7 +609,7 @@ function renderObservations(){
       <div class="obs-top">
         <div>
           <p class="obs-title">${i+1}. ${obs.species}</p>
-          <p class="obs-meta">${obs.count} Ind. · ${obs.sex} · ${obs.location||'—'}</p>
+          <p class="obs-meta">${obs.count} Ind. &middot; ${obs.sex} &middot; ${obs.location||'\u2014'}</p>
         </div>
         <span class="badge">${obs.behaviors[0]||'Beobachtung'}</span>
       </div>
@@ -532,8 +618,8 @@ function renderObservations(){
   if(rows) rows.innerHTML=state.observations.map((obs,i)=>`
     <tr>
       <td>${i+1}</td><td>${obs.species}</td>
-      <td>${obs.count}·${obs.sex}</td>
-      <td>${obs.location||'—'}</td>
+      <td>${obs.count}&middot;${obs.sex}</td>
+      <td>${obs.location||'\u2014'}</td>
       <td>${obs.note||''}</td>
     </tr>`).join('');
 }
@@ -544,18 +630,18 @@ function renderReview(){
   const sex=document.getElementById('sex').value;
   const behaviors=[...document.querySelectorAll('#behaviors .chip.active')].map(el=>el.textContent.trim());
   const obsText=document.getElementById('obsText').value;
-  const location=document.getElementById('mapLocationText')?.value||document.getElementById('locationText')?.value||'—';
+  const location=document.getElementById('mapLocationText')?.value||document.getElementById('locationText')?.value||'\u2014';
   const panel=document.getElementById('reviewPanel');
   if(panel) panel.innerHTML=`
     <div class="list-item"><span>Art</span><strong>${speciesText}</strong></div>
     <div class="list-item"><span>Anzahl</span><strong>${count}</strong></div>
     <div class="list-item"><span>Geschlecht</span><strong>${sex}</strong></div>
-    <div class="list-item"><span>Verhalten</span><strong>${behaviors.join(', ')||'—'}</strong></div>
+    <div class="list-item"><span>Verhalten</span><strong>${behaviors.join(', ')||'\u2014'}</strong></div>
     <div class="list-item"><span>Ort</span><strong>${location}</strong></div>
-    <div class="list-item"><span>Kartenpin</span><strong>${state.pendingMarker?'gesetzt (Nr.'+(state.observations.length+1)+')':'— kein Pin gesetzt'}</strong></div>
-    <div class="panel" style="background:var(--color-surface-2);margin-top:.5rem">${obsText||'—'}</div>`;
+    <div class="list-item"><span>Kartenpin</span><strong>${state.pendingMarker?'gesetzt (Nr.'+(state.observations.length+1)+')':'\u2014 kein Pin gesetzt'}</strong></div>
+    <div class="panel" style="background:var(--color-surface-2);margin-top:.5rem">${obsText||'\u2014'}</div>`;
   const summary=document.getElementById('currentObsSummary');
-  if(summary) summary.textContent=`${speciesText} · ${count} Ind. · ${behaviors.join(', ')||'—'}`;
+  if(summary) summary.textContent=`${speciesText} \u00b7 ${count} Ind. \u00b7 ${behaviors.join(', ')||'\u2014'}`;
 }
 
 async function generatePDF(){
@@ -563,19 +649,20 @@ async function generatePDF(){
   const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
   const pw=210, ph=297, mg=14;
 
-  // Page 1: Metadata
   doc.setFont('helvetica','bold'); doc.setFontSize(14);
-  doc.text('Vogeldokumentation „Grüner Kiez Pankow" 2026', mg, 20);
+  doc.text('Vogeldokumentation \u201eGr\u00fcner Kiez Pankow\u201c 2026', mg, 20);
   doc.setDrawColor(180); doc.line(mg,23,pw-mg,23);
+  const endTimeVal = document.getElementById('endTime')?.value || '\u2014';
   const meta=[
     ['Datum', document.getElementById('pdfDate').textContent],
-    ['Uhrzeit', document.getElementById('pdfTime').textContent+' Uhr'],
+    ['Startzeit', document.getElementById('pdfTime').textContent+' Uhr'],
+    ['Endzeit', endTimeVal !== '\u2014' ? endTimeVal+' Uhr' : '\u2014'],
     ['Ort', document.getElementById('pdfCourt').textContent],
     ['Temperatur', document.getElementById('pdfTemp').textContent],
     ['Wind', document.getElementById('pdfWind').textContent],
     ['Sonne / Niederschlag', document.getElementById('pdfWeather').textContent],
     ['Erfassung durch', document.getElementById('pdfObserver').textContent],
-    ['Bemerkungen', document.getElementById('notes').value||'—'],
+    ['Bemerkungen', document.getElementById('notes').value||'\u2014'],
   ];
   doc.setFontSize(10); let y=30;
   meta.forEach(([label,val])=>{
@@ -584,20 +671,19 @@ async function generatePDF(){
     y+=7;
   });
 
-  // Page 2: Observation table
   doc.addPage();
   doc.setFont('helvetica','bold'); doc.setFontSize(12);
   doc.text('Beobachtungen',mg,18);
   doc.line(mg,21,pw-mg,21);
   const colW=[8,42,32,46,pw-2*mg-128];
-  const headers=['#','Art','Anzahl·Geschlecht','Wo beobachtet?','Was beobachtet/gehört?'];
+  const headers=['#','Art','Anzahl\u00b7Geschlecht','Wo beobachtet?','Was beobachtet/geh\u00f6rt?'];
   let tx=mg, ty=28;
   doc.setFontSize(8); doc.setFont('helvetica','bold');
   headers.forEach((h,i)=>{ doc.text(h,tx+1,ty); tx+=colW[i]; });
   doc.line(mg,ty+2,pw-mg,ty+2); ty+=6;
   doc.setFont('helvetica','normal');
   state.observations.forEach((obs,i)=>{
-    const row=[String(i+1),obs.species,obs.count+'·'+obs.sex,obs.location||'—',obs.note||''];
+    const row=[String(i+1),obs.species,obs.count+'\u00b7'+obs.sex,obs.location||'\u2014',obs.note||''];
     tx=mg; const lineH=5; let maxLines=1;
     row.forEach((cell,ci)=>{
       const lines=doc.splitTextToSize(cell,colW[ci]-2);
@@ -614,45 +700,39 @@ async function generatePDF(){
     ty+=maxLines*lineH+3;
   });
 
-  // Page 3: Map with green numbered pins
   doc.addPage();
   doc.setFont('helvetica','bold'); doc.setFontSize(12);
-  const courtName=state.courtyard==='suedhof'?'Südhof':'Nordhof';
-  doc.text('Kartierung – '+courtName, mg, 18);
+  const courtName=state.courtyard==='suedhof'?'S\u00fcdhof':'Nordhof';
+  doc.text('Kartierung \u2013 '+courtName, mg, 18);
   doc.line(mg,21,pw-mg,21);
-
   const imgSrc=MAP_IMAGES[state.courtyard];
   try{
     const mapDataUrl=await loadImageAsDataURL(imgSrc);
     const mapX=mg, mapY=25;
-    const mapW=pw-2*mg;
-    const mapH=mapW*(4/3);
-    const fitH=Math.min(mapH, ph-mapY-mg);
+    const fitH=Math.min((pw-2*mg)*(4/3), ph-mapY-mg);
     const fitW=fitH*(3/4);
     doc.addImage(mapDataUrl,'WEBP',mapX,mapY,fitW,fitH);
     state.observations.forEach((obs,i)=>{
       if(obs.x==null||obs.y==null) return;
       const px=mapX+(obs.x/100)*fitW;
       const py=mapY+(obs.y/100)*fitH;
-      const r=4;
       doc.setFillColor(26,125,56);
-      doc.circle(px,py,r,'F');
+      doc.circle(px,py,4,'F');
       doc.setTextColor(255,255,255);
       doc.setFont('helvetica','bold'); doc.setFontSize(7);
       const label=String(i+1);
-      const tw=doc.getTextWidth(label);
-      doc.text(label, px-tw/2, py+2.5);
+      doc.text(label, px-doc.getTextWidth(label)/2, py+2.5);
       doc.setTextColor(0,0,0);
     });
   } catch(err){
     doc.setFont('helvetica','normal'); doc.setFontSize(10);
-    doc.text('(Kartenbild nicht verfügbar)',mg,30);
+    doc.text('(Kartenbild nicht verf\u00fcgbar)',mg,30);
     state.observations.forEach((obs,i)=>{
-      if(obs.x!=null) doc.text(`${i+1}. ${obs.species} – x:${obs.x.toFixed(1)}% y:${obs.y.toFixed(1)}%`,mg,42+i*8);
+      if(obs.x!=null) doc.text(`${i+1}. ${obs.species} \u2013 x:${obs.x.toFixed(1)}% y:${obs.y.toFixed(1)}%`,mg,42+i*8);
     });
   }
 
-  const dateVal=document.getElementById('date').value||'2026-05-12';
+  const dateVal=document.getElementById('date').value||todayISO();
   doc.save(`vogeldokumentation-${dateVal}-${state.courtyard}.pdf`);
 }
 
@@ -685,18 +765,32 @@ function showScreen(name){
     renderOverviewMap(document.getElementById('overviewMap'));
   }
   if(name==='map-screen'){
-    document.getElementById('mapTitle').textContent=state.courtyard==='suedhof'?'Südhof-Karte':'Nordhof-Karte';
+    document.getElementById('mapTitle').textContent=state.courtyard==='suedhof'?'S\u00fcdhof-Karte':'Nordhof-Karte';
     renderInteractiveMap(document.getElementById('interactiveMap'));
     renderReview();
   }
   if(name==='review-save') renderReview();
-  if(name==='export-preview') renderObservations();
+  if(name==='export-preview'){
+    // Pre-fill endTime with current time when arriving at this screen
+    const endEl = document.getElementById('endTime');
+    if(endEl && !endEl.value) endEl.value = currentTimeHHMM();
+    renderObservations();
+    updateSummaryFields();
+  }
 }
 
 function wireButtons(){
   document.querySelectorAll('.nav').forEach(btn=>{
     btn.onclick=()=>showScreen(btn.dataset.target);
   });
+
+  // "Erfassung starten" — validate first
+  const startBtn = document.getElementById('startSurveyBtn');
+  if(startBtn) startBtn.onclick=()=>{
+    if(validateSurveyForm()) showScreen('survey-overview');
+    else document.getElementById('validationBanner')?.scrollIntoView({behavior:'smooth',block:'nearest'});
+  };
+
   const confirmBtn=document.getElementById('confirmLocation');
   if(confirmBtn) confirmBtn.onclick=()=>showScreen('review-save');
 
@@ -727,7 +821,7 @@ function wireButtons(){
 
   const pdfBtn=document.getElementById('generatePdf');
   if(pdfBtn) pdfBtn.onclick=async()=>{
-    pdfBtn.disabled=true; pdfBtn.textContent='Erstelle PDF…';
+    pdfBtn.disabled=true; pdfBtn.textContent='Erstelle PDF\u2026';
     try{ await generatePDF(); showScreen('export-done'); }
     catch(e){ alert('PDF-Fehler: '+e.message); }
     finally{ pdfBtn.disabled=false; pdfBtn.textContent='PDF erzeugen'; }
@@ -755,12 +849,19 @@ document.getElementById('behaviors').addEventListener('click',(e)=>{
   const el=document.getElementById(id);
   if(el) el.addEventListener('change',updateSummaryFields);
 });
+document.getElementById('endTime')?.addEventListener('input', updateSummaryFields);
 ['species','count','sex','obsText','locationText'].forEach(id=>{
   const el=document.getElementById(id);
   if(el){ el.addEventListener('input',renderReview); el.addEventListener('change',renderReview); }
 });
-backBtn.addEventListener('click',()=>showScreen(backMap[state.screen]||'home'));
+backBtn.addEventListener('click',()=>{
+  if(state.screen==='new-survey') clearValidation();
+  showScreen(backMap[state.screen]||'home');
+});
 
+// Init: set today's date and current time
+document.getElementById('date').value = todayISO();
+document.getElementById('time').value = currentTimeHHMM();
 updateSummaryFields();
 renderObservations();
 showScreen('home');
