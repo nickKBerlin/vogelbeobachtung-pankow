@@ -116,7 +116,7 @@
 <body>
 <div class="app">
   <div class="topbar">
-    <button class="icon-btn hidden" id="backBtn" aria-label="Zur&uuml;ck">&larr;</button>
+    <button class="icon-btn hidden" id="backBtn" aria-label="Zurück">&larr;</button>
     <h1 id="topTitle">Vogelbeobachtung</h1>
     <div class="grow"></div>
     <button class="icon-btn" id="themeToggle" aria-label="Farbschema wechseln">&#9680;</button>
@@ -150,13 +150,13 @@
       <div class="panel stack">
         <div class="field">
           <label for="date">Datum</label>
-          <input id="date" class="input" type="date">
-          <div class="hint" id="dateDisplay"></div>
+          <input id="date" class="input" type="text" placeholder="TT.MM.JJJJ" maxlength="10" inputmode="numeric" autocomplete="off">
+          <div class="hint">Format: TT.MM.JJJJ &mdash; wird automatisch formatiert</div>
         </div>
         <div class="field">
           <label for="time">Startzeit</label>
-          <input id="time" class="input" type="time">
-          <div class="hint">24-Stunden-Format, z.&thinsp;B. 18:30</div>
+          <input id="time" class="input" type="text" placeholder="HH:MM" maxlength="5" inputmode="numeric" autocomplete="off">
+          <div class="hint">24-Stunden-Format, z.&thinsp;B. 08:30 oder 14:26</div>
         </div>
         <div class="field">
           <label>Hof</label>
@@ -209,7 +209,7 @@
     </div>
   </section>
 
-  <!-- SCREEN 3: &Uuml;bersicht -->
+  <!-- SCREEN 3: Übersicht -->
   <section class="screen" data-screen="survey-overview">
     <div class="stack">
       <div>
@@ -231,10 +231,8 @@
       </div>
       <div class="map-card">
         <div class="map-toolbar">
-          <div>
-            <strong>Kartierung</strong>
-            <div class="hint">Alle eingetragenen Beobachtungspunkte.</div>
-          </div>
+          <div><strong>Kartierung</strong>
+          <div class="hint">Alle eingetragenen Beobachtungspunkte.</div></div>
         </div>
         <div class="map" id="overviewMap"></div>
       </div>
@@ -269,7 +267,7 @@
             <option value="Wb">Wb &ndash; Waldbauml&auml;ufer</option>
             <option value="KL">KL &ndash; Kleiber</option>
             <option value="Bs">Bs &ndash; Buntspecht</option>
-            <option value="G&uuml;">G&uuml; &ndash; Gr&uuml;nspecht</option>
+            <option value="Gü">Gü &ndash; Grünspecht</option>
             <option value="R">R &ndash; Rotkehlchen</option>
             <option value="S" selected>S &ndash; Star</option>
             <option value="E">E &ndash; Elster</option>
@@ -347,7 +345,7 @@
     </div>
   </section>
 
-  <!-- SCREEN 6: Pr&uuml;fen -->
+  <!-- SCREEN 6: Prüfen -->
   <section class="screen" data-screen="review-save">
     <div class="stack">
       <div>
@@ -369,9 +367,9 @@
       </div>
       <div class="panel stack">
         <div class="field">
-          <label for="endTime">Endzeit der Erfassung <span class="required-star">*</span></label>
-          <input id="endTime" class="input" type="time">
-          <div class="hint">Wann wurde die Erfassung beendet?</div>
+          <label for="endTime">Endzeit der Erfassung</label>
+          <input id="endTime" class="input" type="text" placeholder="HH:MM" maxlength="5" inputmode="numeric" autocomplete="off">
+          <div class="hint">24-Stunden-Format, z.&thinsp;B. 16:45</div>
         </div>
       </div>
       <div class="preview-sheet">
@@ -420,17 +418,53 @@
 
 <script>
 const MAP_IMAGES = {
-  suedhof: '2026_Karte_S\u00fcdhof.webp',
+  suedhof: '2026_Karte_Südhof.webp',
   nordhof: '2026_Karte_Nordhof.webp'
 };
 
-function currentTimeHHMM() {
-  const now = new Date();
-  return now.toTimeString().slice(0,5);
+// Returns today as DD.MM.YYYY
+function todayDE() {
+  const n = new Date();
+  const d = String(n.getDate()).padStart(2,'0');
+  const m = String(n.getMonth()+1).padStart(2,'0');
+  const y = n.getFullYear();
+  return `${d}.${m}.${y}`;
 }
-function todayISO() {
-  const now = new Date();
-  return now.toISOString().slice(0,10);
+
+// Returns current time as HH:MM
+function currentTimeHHMM() {
+  const n = new Date();
+  return String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0');
+}
+
+// Parse DD.MM.YYYY -> YYYY-MM-DD for PDF filename
+function deToISO(de) {
+  const p = de.split('.');
+  if (p.length === 3 && p[2].length === 4) return `${p[2]}-${p[1]}-${p[0]}`;
+  return de;
+}
+
+// Auto-format date input: insert dots after DD and MM
+function setupDateInput(el) {
+  el.addEventListener('input', function(e) {
+    let v = this.value.replace(/\D/g,'');
+    if (v.length > 2) v = v.slice(0,2) + '.' + v.slice(2);
+    if (v.length > 5) v = v.slice(0,5) + '.' + v.slice(5);
+    if (v.length > 10) v = v.slice(0,10);
+    this.value = v;
+    updateSummaryFields();
+  });
+}
+
+// Auto-format time input: insert colon after HH, only digits 0-9, max HH:MM
+function setupTimeInput(el) {
+  el.addEventListener('input', function() {
+    let v = this.value.replace(/\D/g,'');
+    if (v.length > 2) v = v.slice(0,2) + ':' + v.slice(2);
+    if (v.length > 5) v = v.slice(0,5);
+    this.value = v;
+    updateSummaryFields();
+  });
 }
 
 const state = {
@@ -448,7 +482,7 @@ const ctaBar   = document.getElementById('ctaBar');
 const titles = {
   home:'Vogelbeobachtung','new-survey':'Neue Erfassung',
   'survey-overview':'Erfassung','observation-form':'Beobachtung',
-  'map-screen':'Karte','review-save':'Pr\u00fcfen',
+  'map-screen':'Karte','review-save':'Prüfen',
   'export-preview':'PDF-Vorschau','export-done':'Export'
 };
 const backMap = {
@@ -459,12 +493,12 @@ const backMap = {
 const ctas = {
   home:'',
   'new-survey':`<button class="secondary nav" data-target="home">Abbrechen</button><button class="primary" id="startSurveyBtn">Erfassung starten</button>`,
-  'survey-overview':`<button class="secondary nav" data-target="export-preview">PDF exportieren</button><button class="primary nav" data-target="observation-form">Beobachtung hinzuf\u00fcgen</button>`,
-  'observation-form':`<button class="secondary nav" data-target="survey-overview">Zur\u00fcck</button><button class="primary nav" data-target="map-screen">Weiter zur Karte</button>`,
-  'map-screen':`<button class="secondary nav" data-target="observation-form">Zur\u00fcck</button><button class="primary" id="confirmLocation">Ort \u00fcbernehmen</button>`,
+  'survey-overview':`<button class="secondary nav" data-target="export-preview">PDF exportieren</button><button class="primary nav" data-target="observation-form">Beobachtung hinzufügen</button>`,
+  'observation-form':`<button class="secondary nav" data-target="survey-overview">Zurück</button><button class="primary nav" data-target="map-screen">Weiter zur Karte</button>`,
+  'map-screen':`<button class="secondary nav" data-target="observation-form">Zurück</button><button class="primary" id="confirmLocation">Ort übernehmen</button>`,
   'review-save':`<button class="secondary nav" data-target="map-screen">Ort bearbeiten</button><button class="primary" id="saveObservation">Jetzt speichern</button>`,
-  'export-preview':`<button class="secondary nav" data-target="survey-overview">Zur\u00fcck</button><button class="primary" id="generatePdf">PDF erzeugen</button>`,
-  'export-done':`<button class="secondary nav" data-target="home">Zur \u00dcbersicht</button><button class="primary nav" data-target="new-survey">Neue Erfassung</button>`
+  'export-preview':`<button class="secondary nav" data-target="survey-overview">Zurück</button><button class="primary" id="generatePdf">PDF erzeugen</button>`,
+  'export-done':`<button class="secondary nav" data-target="home">Zur Übersicht</button><button class="primary nav" data-target="new-survey">Neue Erfassung</button>`
 };
 
 // --- Validation ---
@@ -498,36 +532,21 @@ function clearValidation() {
   document.getElementById('validationBanner')?.classList.remove('visible');
 }
 
-// Remove error state on input
 REQUIRED.forEach(({ id, errId }) => {
-  document.getElementById(id)?.addEventListener('input', () => {
-    const el = document.getElementById(id);
-    if (el.value.trim()) {
-      el.classList.remove('error');
-      document.getElementById(errId)?.classList.remove('visible');
-      // hide banner if all clear
-      const anyLeft = REQUIRED.some(r => !document.getElementById(r.id)?.value.trim());
-      if (!anyLeft) document.getElementById('validationBanner')?.classList.remove('visible');
-    }
-  });
-  document.getElementById(id)?.addEventListener('change', () => {
-    const el = document.getElementById(id);
-    if (el.value.trim()) {
-      el.classList.remove('error');
-      document.getElementById(errId)?.classList.remove('visible');
-      const anyLeft = REQUIRED.some(r => !document.getElementById(r.id)?.value.trim());
-      if (!anyLeft) document.getElementById('validationBanner')?.classList.remove('visible');
-    }
+  ['input','change'].forEach(evt => {
+    document.getElementById(id)?.addEventListener(evt, () => {
+      const el = document.getElementById(id);
+      if (el.value.trim()) {
+        el.classList.remove('error');
+        document.getElementById(errId)?.classList.remove('visible');
+        const anyLeft = REQUIRED.some(r => !document.getElementById(r.id)?.value.trim());
+        if (!anyLeft) document.getElementById('validationBanner')?.classList.remove('visible');
+      }
+    });
   });
 });
 
 // --- Helpers ---
-function formatDate(iso){
-  if(!iso) return '';
-  const [y,m,d]=iso.split('-');
-  return `${d}.${m}.${y}`;
-}
-
 function buildPin(num, x, y, pending=false){
   const pin=document.createElement('div');
   pin.className='pin'+(pending?' pending':'');
@@ -542,12 +561,10 @@ function renderOverviewMap(container){
   const img=document.createElement('img');
   img.className='map-bg';
   img.src=MAP_IMAGES[state.courtyard];
-  img.alt=state.courtyard==='suedhof'?'S\u00fcdhof-Karte':'Nordhof-Karte';
+  img.alt=state.courtyard==='suedhof'?'Südhof-Karte':'Nordhof-Karte';
   container.appendChild(img);
   state.observations.forEach((obs,i)=>{
-    if(obs.x!=null && obs.y!=null){
-      container.appendChild(buildPin(i+1, obs.x, obs.y));
-    }
+    if(obs.x!=null && obs.y!=null) container.appendChild(buildPin(i+1, obs.x, obs.y));
   });
 }
 
@@ -556,22 +573,19 @@ function renderInteractiveMap(container){
   const img=document.createElement('img');
   img.className='map-bg';
   img.src=MAP_IMAGES[state.courtyard];
-  img.alt=state.courtyard==='suedhof'?'S\u00fcdhof-Karte':'Nordhof-Karte';
+  img.alt=state.courtyard==='suedhof'?'Südhof-Karte':'Nordhof-Karte';
   container.appendChild(img);
   state.observations.forEach((obs,i)=>{
-    if(obs.x!=null && obs.y!=null){
-      container.appendChild(buildPin(i+1, obs.x, obs.y));
-    }
+    if(obs.x!=null && obs.y!=null) container.appendChild(buildPin(i+1, obs.x, obs.y));
   });
-  const nextNum = state.observations.length+1;
-  if(state.pendingMarker){
-    container.appendChild(buildPin(nextNum, state.pendingMarker.x, state.pendingMarker.y, true));
-  }
+  if(state.pendingMarker)
+    container.appendChild(buildPin(state.observations.length+1, state.pendingMarker.x, state.pendingMarker.y, true));
   container.onclick=(e)=>{
     const r=container.getBoundingClientRect();
-    const x=Math.max(3,Math.min(97,((e.clientX-r.left)/r.width)*100));
-    const y=Math.max(3,Math.min(97,((e.clientY-r.top)/r.height)*100));
-    state.pendingMarker={x,y};
+    state.pendingMarker={
+      x: Math.max(3,Math.min(97,((e.clientX-r.left)/r.width)*100)),
+      y: Math.max(3,Math.min(97,((e.clientY-r.top)/r.height)*100))
+    };
     renderInteractiveMap(container);
   };
 }
@@ -579,25 +593,26 @@ function renderInteractiveMap(container){
 function set(id,val){const el=document.getElementById(id);if(el)el.textContent=val;}
 
 function updateSummaryFields(){
-  const dateVal  = document.getElementById('date').value;
-  const timeVal  = document.getElementById('time').value;
-  const tempVal  = document.getElementById('temp').value;
-  const windVal  = document.getElementById('wind').value;
+  const dateVal    = document.getElementById('date').value;
+  const timeVal    = document.getElementById('time').value;
+  const tempVal    = document.getElementById('temp').value;
+  const windVal    = document.getElementById('wind').value;
   const weatherVal = document.getElementById('weather').value;
-  const obsVal   = document.getElementById('observer').value;
-  const endVal   = document.getElementById('endTime')?.value || '';
-  const fmt=formatDate(dateVal);
-  set('dateDisplay',fmt); set('overviewDate',fmt); set('summaryDate',fmt); set('pdfDate',fmt);
-  set('overviewTime',timeVal); set('summaryTime',timeVal); set('pdfTime',timeVal);
-  set('tempDisplay', tempVal ? tempVal+'\u00b0C' : '\u2014');
-  set('pdfTemp', tempVal ? tempVal+'\u00b0C' : '\u2014');
-  set('summaryWind',windVal||'\u2014'); set('pdfWind',windVal||'\u2014');
-  set('summaryWeather',weatherVal||'\u2014'); set('pdfWeather',weatherVal||'\u2014');
-  set('summaryObserver',obsVal||'\u2014'); set('pdfObserver',obsVal||'\u2014');
-  set('pdfEndTime', endVal || '\u2014');
-  const court=state.courtyard==='suedhof'?'S\u00fcdhof':'Nordhof';
+  const obsVal     = document.getElementById('observer').value;
+  const endVal     = document.getElementById('endTime')?.value || '';
+
+  set('overviewDate', dateVal); set('summaryDate', dateVal); set('pdfDate', dateVal);
+  set('overviewTime', timeVal); set('summaryTime', timeVal); set('pdfTime', timeVal);
+  set('tempDisplay', tempVal ? tempVal+'°C' : '—');
+  set('pdfTemp',     tempVal ? tempVal+'°C' : '—');
+  set('summaryWind', windVal||'—');    set('pdfWind',    windVal||'—');
+  set('summaryWeather', weatherVal||'—'); set('pdfWeather', weatherVal||'—');
+  set('summaryObserver', obsVal||'—');  set('pdfObserver', obsVal||'—');
+  set('pdfEndTime', endVal || '—');
+  const court = state.courtyard==='suedhof'?'Südhof':'Nordhof';
   set('courtLabel',court); set('courtLabelMini',court); set('pdfCourt',court);
-  set('exportFilename',`vogeldokumentation-${dateVal||todayISO()}-${state.courtyard}.pdf`);
+  const isoDate = deToISO(dateVal) || new Date().toISOString().slice(0,10);
+  set('exportFilename',`vogeldokumentation-${isoDate}-${state.courtyard}.pdf`);
 }
 
 function renderObservations(){
@@ -609,19 +624,15 @@ function renderObservations(){
       <div class="obs-top">
         <div>
           <p class="obs-title">${i+1}. ${obs.species}</p>
-          <p class="obs-meta">${obs.count} Ind. &middot; ${obs.sex} &middot; ${obs.location||'\u2014'}</p>
+          <p class="obs-meta">${obs.count} Ind. &middot; ${obs.sex} &middot; ${obs.location||'—'}</p>
         </div>
         <span class="badge">${obs.behaviors[0]||'Beobachtung'}</span>
       </div>
       <div class="muted">${obs.note||''}</div>
     </div>`).join('');
   if(rows) rows.innerHTML=state.observations.map((obs,i)=>`
-    <tr>
-      <td>${i+1}</td><td>${obs.species}</td>
-      <td>${obs.count}&middot;${obs.sex}</td>
-      <td>${obs.location||'\u2014'}</td>
-      <td>${obs.note||''}</td>
-    </tr>`).join('');
+    <tr><td>${i+1}</td><td>${obs.species}</td><td>${obs.count}&middot;${obs.sex}</td>
+    <td>${obs.location||'—'}</td><td>${obs.note||''}</td></tr>`).join('');
 }
 
 function renderReview(){
@@ -630,70 +641,63 @@ function renderReview(){
   const sex=document.getElementById('sex').value;
   const behaviors=[...document.querySelectorAll('#behaviors .chip.active')].map(el=>el.textContent.trim());
   const obsText=document.getElementById('obsText').value;
-  const location=document.getElementById('mapLocationText')?.value||document.getElementById('locationText')?.value||'\u2014';
+  const location=document.getElementById('mapLocationText')?.value||document.getElementById('locationText')?.value||'—';
   const panel=document.getElementById('reviewPanel');
   if(panel) panel.innerHTML=`
     <div class="list-item"><span>Art</span><strong>${speciesText}</strong></div>
     <div class="list-item"><span>Anzahl</span><strong>${count}</strong></div>
     <div class="list-item"><span>Geschlecht</span><strong>${sex}</strong></div>
-    <div class="list-item"><span>Verhalten</span><strong>${behaviors.join(', ')||'\u2014'}</strong></div>
+    <div class="list-item"><span>Verhalten</span><strong>${behaviors.join(', ')||'—'}</strong></div>
     <div class="list-item"><span>Ort</span><strong>${location}</strong></div>
-    <div class="list-item"><span>Kartenpin</span><strong>${state.pendingMarker?'gesetzt (Nr.'+(state.observations.length+1)+')':'\u2014 kein Pin gesetzt'}</strong></div>
-    <div class="panel" style="background:var(--color-surface-2);margin-top:.5rem">${obsText||'\u2014'}</div>`;
+    <div class="list-item"><span>Kartenpin</span><strong>${state.pendingMarker?'gesetzt (Nr.'+(state.observations.length+1)+')':'— kein Pin gesetzt'}</strong></div>
+    <div class="panel" style="background:var(--color-surface-2);margin-top:.5rem">${obsText||'—'}</div>`;
   const summary=document.getElementById('currentObsSummary');
-  if(summary) summary.textContent=`${speciesText} \u00b7 ${count} Ind. \u00b7 ${behaviors.join(', ')||'\u2014'}`;
+  if(summary) summary.textContent=`${speciesText} · ${count} Ind. · ${behaviors.join(', ')||'—'}`;
 }
 
 async function generatePDF(){
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
   const pw=210, ph=297, mg=14;
-
   doc.setFont('helvetica','bold'); doc.setFontSize(14);
-  doc.text('Vogeldokumentation \u201eGr\u00fcner Kiez Pankow\u201c 2026', mg, 20);
+  doc.text('Vogeldokumentation „Grüner Kiez Pankow“ 2026', mg, 20);
   doc.setDrawColor(180); doc.line(mg,23,pw-mg,23);
-  const endTimeVal = document.getElementById('endTime')?.value || '\u2014';
+  const endVal = document.getElementById('endTime')?.value || '—';
   const meta=[
-    ['Datum', document.getElementById('pdfDate').textContent],
-    ['Startzeit', document.getElementById('pdfTime').textContent+' Uhr'],
-    ['Endzeit', endTimeVal !== '\u2014' ? endTimeVal+' Uhr' : '\u2014'],
-    ['Ort', document.getElementById('pdfCourt').textContent],
-    ['Temperatur', document.getElementById('pdfTemp').textContent],
-    ['Wind', document.getElementById('pdfWind').textContent],
+    ['Datum',              document.getElementById('pdfDate').textContent],
+    ['Startzeit',          document.getElementById('pdfTime').textContent+' Uhr'],
+    ['Endzeit',            endVal !== '—' ? endVal+' Uhr' : '—'],
+    ['Ort',                document.getElementById('pdfCourt').textContent],
+    ['Temperatur',         document.getElementById('pdfTemp').textContent],
+    ['Wind',               document.getElementById('pdfWind').textContent],
     ['Sonne / Niederschlag', document.getElementById('pdfWeather').textContent],
-    ['Erfassung durch', document.getElementById('pdfObserver').textContent],
-    ['Bemerkungen', document.getElementById('notes').value||'\u2014'],
+    ['Erfassung durch',    document.getElementById('pdfObserver').textContent],
+    ['Bemerkungen',        document.getElementById('notes').value||'—'],
   ];
   doc.setFontSize(10); let y=30;
   meta.forEach(([label,val])=>{
     doc.setFont('helvetica','bold'); doc.text(label+':',mg,y);
-    doc.setFont('helvetica','normal'); doc.text(val,70,y);
-    y+=7;
+    doc.setFont('helvetica','normal'); doc.text(val,70,y); y+=7;
   });
 
   doc.addPage();
   doc.setFont('helvetica','bold'); doc.setFontSize(12);
-  doc.text('Beobachtungen',mg,18);
-  doc.line(mg,21,pw-mg,21);
+  doc.text('Beobachtungen',mg,18); doc.line(mg,21,pw-mg,21);
   const colW=[8,42,32,46,pw-2*mg-128];
-  const headers=['#','Art','Anzahl\u00b7Geschlecht','Wo beobachtet?','Was beobachtet/geh\u00f6rt?'];
+  const headers=['#','Art','Anzahl·Geschlecht','Wo beobachtet?','Was beobachtet/gehört?'];
   let tx=mg, ty=28;
   doc.setFontSize(8); doc.setFont('helvetica','bold');
   headers.forEach((h,i)=>{ doc.text(h,tx+1,ty); tx+=colW[i]; });
   doc.line(mg,ty+2,pw-mg,ty+2); ty+=6;
   doc.setFont('helvetica','normal');
   state.observations.forEach((obs,i)=>{
-    const row=[String(i+1),obs.species,obs.count+'\u00b7'+obs.sex,obs.location||'\u2014',obs.note||''];
+    const row=[String(i+1),obs.species,obs.count+'·'+obs.sex,obs.location||'—',obs.note||''];
     tx=mg; const lineH=5; let maxLines=1;
-    row.forEach((cell,ci)=>{
-      const lines=doc.splitTextToSize(cell,colW[ci]-2);
-      maxLines=Math.max(maxLines,lines.length);
-    });
+    row.forEach((cell,ci)=>{ const l=doc.splitTextToSize(cell,colW[ci]-2); maxLines=Math.max(maxLines,l.length); });
     if(ty+maxLines*lineH>ph-mg){ doc.addPage(); ty=18; }
     tx=mg;
     row.forEach((cell,ci)=>{
-      const lines=doc.splitTextToSize(cell,colW[ci]-2);
-      lines.forEach((ln,li)=>doc.text(ln,tx+1,ty+li*lineH));
+      doc.splitTextToSize(cell,colW[ci]-2).forEach((ln,li)=>doc.text(ln,tx+1,ty+li*lineH));
       tx+=colW[ci];
     });
     doc.setDrawColor(220); doc.line(mg,ty+maxLines*lineH+1,pw-mg,ty+maxLines*lineH+1);
@@ -702,52 +706,39 @@ async function generatePDF(){
 
   doc.addPage();
   doc.setFont('helvetica','bold'); doc.setFontSize(12);
-  const courtName=state.courtyard==='suedhof'?'S\u00fcdhof':'Nordhof';
-  doc.text('Kartierung \u2013 '+courtName, mg, 18);
-  doc.line(mg,21,pw-mg,21);
-  const imgSrc=MAP_IMAGES[state.courtyard];
+  const courtName=state.courtyard==='suedhof'?'Südhof':'Nordhof';
+  doc.text('Kartierung – '+courtName, mg, 18); doc.line(mg,21,pw-mg,21);
   try{
-    const mapDataUrl=await loadImageAsDataURL(imgSrc);
+    const mapDataUrl=await loadImageAsDataURL(MAP_IMAGES[state.courtyard]);
     const mapX=mg, mapY=25;
     const fitH=Math.min((pw-2*mg)*(4/3), ph-mapY-mg);
     const fitW=fitH*(3/4);
     doc.addImage(mapDataUrl,'WEBP',mapX,mapY,fitW,fitH);
     state.observations.forEach((obs,i)=>{
       if(obs.x==null||obs.y==null) return;
-      const px=mapX+(obs.x/100)*fitW;
-      const py=mapY+(obs.y/100)*fitH;
-      doc.setFillColor(26,125,56);
-      doc.circle(px,py,4,'F');
-      doc.setTextColor(255,255,255);
-      doc.setFont('helvetica','bold'); doc.setFontSize(7);
-      const label=String(i+1);
-      doc.text(label, px-doc.getTextWidth(label)/2, py+2.5);
+      const px=mapX+(obs.x/100)*fitW, py=mapY+(obs.y/100)*fitH;
+      doc.setFillColor(26,125,56); doc.circle(px,py,4,'F');
+      doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(7);
+      const lbl=String(i+1);
+      doc.text(lbl, px-doc.getTextWidth(lbl)/2, py+2.5);
       doc.setTextColor(0,0,0);
     });
   } catch(err){
     doc.setFont('helvetica','normal'); doc.setFontSize(10);
-    doc.text('(Kartenbild nicht verf\u00fcgbar)',mg,30);
+    doc.text('(Kartenbild nicht verfügbar)',mg,30);
     state.observations.forEach((obs,i)=>{
-      if(obs.x!=null) doc.text(`${i+1}. ${obs.species} \u2013 x:${obs.x.toFixed(1)}% y:${obs.y.toFixed(1)}%`,mg,42+i*8);
+      if(obs.x!=null) doc.text(`${i+1}. ${obs.species} – x:${obs.x.toFixed(1)}% y:${obs.y.toFixed(1)}%`,mg,42+i*8);
     });
   }
-
-  const dateVal=document.getElementById('date').value||todayISO();
-  doc.save(`vogeldokumentation-${dateVal}-${state.courtyard}.pdf`);
+  const isoDate = deToISO(document.getElementById('date').value) || new Date().toISOString().slice(0,10);
+  doc.save(`vogeldokumentation-${isoDate}-${state.courtyard}.pdf`);
 }
 
 function loadImageAsDataURL(src){
   return new Promise((resolve,reject)=>{
-    const img=new Image();
-    img.crossOrigin='anonymous';
-    img.onload=()=>{
-      const c=document.createElement('canvas');
-      c.width=img.naturalWidth; c.height=img.naturalHeight;
-      c.getContext('2d').drawImage(img,0,0);
-      resolve(c.toDataURL('image/webp',0.85));
-    };
-    img.onerror=reject;
-    img.src=src;
+    const img=new Image(); img.crossOrigin='anonymous';
+    img.onload=()=>{ const c=document.createElement('canvas'); c.width=img.naturalWidth; c.height=img.naturalHeight; c.getContext('2d').drawImage(img,0,0); resolve(c.toDataURL('image/webp',0.85)); };
+    img.onerror=reject; img.src=src;
   });
 }
 
@@ -760,32 +751,23 @@ function showScreen(name){
   ctaBar.classList.toggle('active',Boolean(ctas[name]));
   updateSummaryFields();
   wireButtons();
-  if(name==='survey-overview'){
-    renderObservations();
-    renderOverviewMap(document.getElementById('overviewMap'));
-  }
+  if(name==='survey-overview'){ renderObservations(); renderOverviewMap(document.getElementById('overviewMap')); }
   if(name==='map-screen'){
-    document.getElementById('mapTitle').textContent=state.courtyard==='suedhof'?'S\u00fcdhof-Karte':'Nordhof-Karte';
-    renderInteractiveMap(document.getElementById('interactiveMap'));
-    renderReview();
+    document.getElementById('mapTitle').textContent=state.courtyard==='suedhof'?'Südhof-Karte':'Nordhof-Karte';
+    renderInteractiveMap(document.getElementById('interactiveMap')); renderReview();
   }
   if(name==='review-save') renderReview();
   if(name==='export-preview'){
-    // Pre-fill endTime with current time when arriving at this screen
-    const endEl = document.getElementById('endTime');
-    if(endEl && !endEl.value) endEl.value = currentTimeHHMM();
-    renderObservations();
-    updateSummaryFields();
+    const endEl=document.getElementById('endTime');
+    if(endEl && !endEl.value) endEl.value=currentTimeHHMM();
+    renderObservations(); updateSummaryFields();
   }
 }
 
 function wireButtons(){
-  document.querySelectorAll('.nav').forEach(btn=>{
-    btn.onclick=()=>showScreen(btn.dataset.target);
-  });
+  document.querySelectorAll('.nav').forEach(btn=>{ btn.onclick=()=>showScreen(btn.dataset.target); });
 
-  // "Erfassung starten" — validate first
-  const startBtn = document.getElementById('startSurveyBtn');
+  const startBtn=document.getElementById('startSurveyBtn');
   if(startBtn) startBtn.onclick=()=>{
     if(validateSurveyForm()) showScreen('survey-overview');
     else document.getElementById('validationBanner')?.scrollIntoView({behavior:'smooth',block:'nearest'});
@@ -804,24 +786,19 @@ function wireButtons(){
       location:document.getElementById('mapLocationText')?.value||document.getElementById('locationText')?.value||'Kartierter Punkt',
       behaviors:[...document.querySelectorAll('#behaviors .chip.active')].map(el=>el.textContent.trim()),
       note:document.getElementById('obsText').value,
-      x:state.pendingMarker?.x??null,
-      y:state.pendingMarker?.y??null
+      x:state.pendingMarker?.x??null, y:state.pendingMarker?.y??null
     });
     state.pendingMarker=null;
-    document.getElementById('obsText').value='';
-    document.getElementById('locationText').value='';
-    document.getElementById('mapLocationText').value='';
-    document.getElementById('movementText').value='';
+    ['obsText','locationText','mapLocationText','movementText'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
     document.getElementById('count').value='1';
     document.querySelectorAll('#behaviors .chip').forEach(c=>c.classList.remove('active'));
     document.querySelector('#behaviors .chip')?.classList.add('active');
-    renderObservations();
-    showScreen('survey-overview');
+    renderObservations(); showScreen('survey-overview');
   };
 
   const pdfBtn=document.getElementById('generatePdf');
   if(pdfBtn) pdfBtn.onclick=async()=>{
-    pdfBtn.disabled=true; pdfBtn.textContent='Erstelle PDF\u2026';
+    pdfBtn.disabled=true; pdfBtn.textContent='Erstelle PDF…';
     try{ await generatePDF(); showScreen('export-done'); }
     catch(e){ alert('PDF-Fehler: '+e.message); }
     finally{ pdfBtn.disabled=false; pdfBtn.textContent='PDF erzeugen'; }
@@ -830,37 +807,32 @@ function wireButtons(){
 
 document.getElementById('themeToggle').addEventListener('click',()=>{
   const html=document.documentElement;
-  html.setAttribute('data-theme',html.getAttribute('data-theme')==='dark'?'light':'dark');
+  html.setAttribute('data-theme', html.getAttribute('data-theme')==='dark'?'light':'dark');
 });
 document.getElementById('courtyardSelect').addEventListener('click',(e)=>{
-  const btn=e.target.closest('button[data-court]');
-  if(!btn) return;
+  const btn=e.target.closest('button[data-court]'); if(!btn) return;
   state.courtyard=btn.dataset.court;
   [...document.querySelectorAll('#courtyardSelect button')].forEach(b=>b.classList.toggle('active',b===btn));
   updateSummaryFields();
 });
 document.getElementById('behaviors').addEventListener('click',(e)=>{
-  const chip=e.target.closest('.chip');
-  if(!chip) return;
-  chip.classList.toggle('active');
-  renderReview();
+  const chip=e.target.closest('.chip'); if(!chip) return;
+  chip.classList.toggle('active'); renderReview();
 });
-['date','time','temp','wind','weather','observer'].forEach(id=>{
+['temp','wind','weather','observer'].forEach(id=>{
   const el=document.getElementById(id);
-  if(el) el.addEventListener('change',updateSummaryFields);
-});
-document.getElementById('endTime')?.addEventListener('input', updateSummaryFields);
-['species','count','sex','obsText','locationText'].forEach(id=>{
-  const el=document.getElementById(id);
-  if(el){ el.addEventListener('input',renderReview); el.addEventListener('change',renderReview); }
+  if(el) el.addEventListener('change', updateSummaryFields);
 });
 backBtn.addEventListener('click',()=>{
   if(state.screen==='new-survey') clearValidation();
   showScreen(backMap[state.screen]||'home');
 });
 
-// Init: set today's date and current time
-document.getElementById('date').value = todayISO();
+// Init
+setupDateInput(document.getElementById('date'));
+setupTimeInput(document.getElementById('time'));
+setupTimeInput(document.getElementById('endTime'));
+document.getElementById('date').value = todayDE();
 document.getElementById('time').value = currentTimeHHMM();
 updateSummaryFields();
 renderObservations();
