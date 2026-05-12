@@ -78,14 +78,11 @@
     .badge{display:inline-flex;align-items:center;padding:.35rem .65rem;border-radius:var(--radius-full);background:var(--color-surface-offset);font-size:var(--text-xs);font-weight:700;white-space:nowrap}
     .map-card{background:linear-gradient(180deg,color-mix(in srgb,var(--color-primary-highlight) 45%,var(--color-surface-2)),var(--color-surface));border:1px solid var(--color-border);border-radius:var(--radius-xl);padding:var(--space-3);display:grid;gap:var(--space-3)}
     .map-toolbar{display:flex;justify-content:space-between;align-items:center;gap:var(--space-2)}
-    /* Map container: portrait ratio matching the real map images */
     .map{position:relative;width:100%;aspect-ratio:3/4;border-radius:calc(var(--radius-xl) - var(--space-3));overflow:hidden;background:#ece8df;border:1px solid color-mix(in srgb,var(--color-border) 80%,transparent);cursor:crosshair}
     .map img.map-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;user-select:none}
-    /* Numbered pin */
     .pin{position:absolute;transform:translate(-50%,-100%);pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:2px}
     .pin-circle{width:28px;height:28px;border-radius:50%;background:#1a7d38;border:2.5px solid #fff;box-shadow:0 3px 8px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;font-family:system-ui,sans-serif}
     .pin-tail{width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:8px solid #1a7d38}
-    /* pending marker (not yet saved) uses lighter ring */
     .pin.pending .pin-circle{background:#e8a020;border-color:#fff}
     .pin.pending .pin-tail{border-top-color:#e8a020}
     .mini-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-3)}
@@ -148,7 +145,7 @@
         <div class="field">
           <label for="time">Uhrzeit</label>
           <input id="time" class="input" type="time" value="14:30">
-          <div class="hint">24-Stunden-Format, z. B. 18:30</div>
+          <div class="hint">24-Stunden-Format, z. B. 18:30</div>
         </div>
         <div class="field">
           <label>Hof</label>
@@ -293,11 +290,11 @@
         </div>
         <div class="field">
           <label for="locationText">Wo beobachtet?</label>
-          <input id="locationText" class="input" type="text" placeholder="z. B. Konzertwiese, Gebüsch Ossietzkystr. 26">
+          <input id="locationText" class="input" type="text" placeholder="z. B. Konzertwiese, Gebüsch Ossietzkystr. 26">
         </div>
         <div class="field">
           <label for="obsText">Was beobachtet / gehört?</label>
-          <textarea id="obsText" placeholder="z. B. singt, fliegt, pickt Nahrung, balzt"></textarea>
+          <textarea id="obsText" placeholder="z. B. singt, fliegt, pickt Nahrung, balzt"></textarea>
         </div>
       </div>
     </div>
@@ -309,7 +306,7 @@
       <div>
         <span class="eyebrow">Screen 5</span>
         <h2 style="font-size:var(--text-xl);margin:.75rem 0 .35rem">Ort auf Karte markieren</h2>
-        <p class="muted">Tippe auf die Karte, um den Beobachtungsort zu setzen. Verschiebbar bis „Ort übernehmen“.</p>
+        <p class="muted">Tippe auf die Karte, um den Beobachtungsort zu setzen. Verschiebbar bis „Ort übernehmen".</p>
       </div>
       <div class="panel stack success">
         <div><strong>Aktuelle Beobachtung</strong></div>
@@ -323,11 +320,11 @@
         <div class="map" id="interactiveMap"></div>
         <div class="field">
           <label for="mapLocationText">Ortsbeschreibung</label>
-          <input id="mapLocationText" class="input" type="text" placeholder="z. B. Konzertwiese, Gebüsch Ossietzkystr. 26">
+          <input id="mapLocationText" class="input" type="text" placeholder="z. B. Konzertwiese, Gebüsch Ossietzkystr. 26">
         </div>
         <div class="field">
           <label for="movementText">Flugbewegung (optional)</label>
-          <input id="movementText" class="input" type="text" placeholder="z. B. von Kavalierstraße 25 Richtung Gartenbereich">
+          <input id="movementText" class="input" type="text" placeholder="z. B. von Kavalierstraße 25 Richtung Gartenbereich">
         </div>
       </div>
     </div>
@@ -354,7 +351,7 @@
         <p class="muted">Kopfdaten + Beobachtungstabelle + Karte mit Nummern als separater Anhang.</p>
       </div>
       <div class="preview-sheet">
-        <h3>Vogeldokumentation „Grüner Kiez Pankow“ 2026</h3>
+        <h3>Vogeldokumentation „Grüner Kiez Pankow" 2026</h3>
         <div class="list-plain">
           <div class="list-item"><span>Datum</span><strong id="pdfDate">12.05.2026</strong></div>
           <div class="list-item"><span>Uhrzeit</span><strong id="pdfTime">14:30</strong></div>
@@ -397,15 +394,16 @@
 </div>
 
 <script>
+// Exact filenames as uploaded to the repo
 const MAP_IMAGES = {
-  suedhof: 'karte-suedhof.jpg',
-  nordhof: 'karte-nordhof.jpg'
+  suedhof: '2026_Karte_S\u00fcdhof.webp',
+  nordhof: '2026_Karte_Nordhof.webp'
 };
 
 const state = {
   screen: 'home',
   courtyard: 'suedhof',
-  pendingMarker: null,   // {x,y} percent — current unsaved pin
+  pendingMarker: null,
   observations: []
 };
 
@@ -442,7 +440,6 @@ function formatDate(iso){
   return `${d}.${m}.${y}`;
 }
 
-// ── Map rendering ────────────────────────────────────────────────
 function buildPin(num, x, y, pending=false){
   const pin=document.createElement('div');
   pin.className='pin'+(pending?' pending':'');
@@ -474,20 +471,19 @@ function renderInteractiveMap(container){
   img.alt=state.courtyard==='suedhof'?'Südhof-Karte':'Nordhof-Karte';
   container.appendChild(img);
 
-  // Draw saved observations (fixed, green)
+  // All saved observations (green, fixed)
   state.observations.forEach((obs,i)=>{
     if(obs.x!=null && obs.y!=null){
       container.appendChild(buildPin(i+1, obs.x, obs.y));
     }
   });
 
-  // Draw pending marker (orange, next number)
+  // Pending marker (orange, next number)
   const nextNum = state.observations.length+1;
   if(state.pendingMarker){
     container.appendChild(buildPin(nextNum, state.pendingMarker.x, state.pendingMarker.y, true));
   }
 
-  // Click handler
   container.onclick=(e)=>{
     const r=container.getBoundingClientRect();
     const x=Math.max(3,Math.min(97,((e.clientX-r.left)/r.width)*100));
@@ -497,7 +493,6 @@ function renderInteractiveMap(container){
   };
 }
 
-// ── Summary helpers ───────────────────────────────────────────────
 function set(id,val){const el=document.getElementById(id);if(el)el.textContent=val;}
 
 function updateSummaryFields(){
@@ -563,19 +558,15 @@ function renderReview(){
   if(summary) summary.textContent=`${speciesText} · ${count} Ind. · ${behaviors.join(', ')||'—'}`;
 }
 
-// ── PDF Export ────────────────────────────────────────────────────
 async function generatePDF(){
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
   const pw=210, ph=297, mg=14;
 
-  // ---- Page 1: Header + Metadata ----
-  doc.setFont('helvetica','bold');
-  doc.setFontSize(14);
-  doc.text('Vogeldokumentation „Grüner Kiez Pankow“ 2026', mg, 20);
-  doc.setDrawColor(180);
-  doc.line(mg, 23, pw-mg, 23);
-
+  // Page 1: Metadata
+  doc.setFont('helvetica','bold'); doc.setFontSize(14);
+  doc.text('Vogeldokumentation „Grüner Kiez Pankow" 2026', mg, 20);
+  doc.setDrawColor(180); doc.line(mg,23,pw-mg,23);
   const meta=[
     ['Datum', document.getElementById('pdfDate').textContent],
     ['Uhrzeit', document.getElementById('pdfTime').textContent+' Uhr'],
@@ -586,33 +577,28 @@ async function generatePDF(){
     ['Erfassung durch', document.getElementById('pdfObserver').textContent],
     ['Bemerkungen', document.getElementById('notes').value||'—'],
   ];
-  doc.setFontSize(10);
-  let y=30;
+  doc.setFontSize(10); let y=30;
   meta.forEach(([label,val])=>{
     doc.setFont('helvetica','bold'); doc.text(label+':',mg,y);
     doc.setFont('helvetica','normal'); doc.text(val,70,y);
     y+=7;
   });
 
-  // ---- Page 2: Observation table ----
+  // Page 2: Observation table
   doc.addPage();
   doc.setFont('helvetica','bold'); doc.setFontSize(12);
   doc.text('Beobachtungen',mg,18);
   doc.line(mg,21,pw-mg,21);
-
-  const colW=[8,42,32,46,pw-mg-mg-8-42-32-46];
+  const colW=[8,42,32,46,pw-2*mg-128];
   const headers=['#','Art','Anzahl·Geschlecht','Wo beobachtet?','Was beobachtet/gehört?'];
-  let tx=mg; let ty=28;
+  let tx=mg, ty=28;
   doc.setFontSize(8); doc.setFont('helvetica','bold');
   headers.forEach((h,i)=>{ doc.text(h,tx+1,ty); tx+=colW[i]; });
-  doc.line(mg,ty+2,pw-mg,ty+2);
-  ty+=6;
+  doc.line(mg,ty+2,pw-mg,ty+2); ty+=6;
   doc.setFont('helvetica','normal');
   state.observations.forEach((obs,i)=>{
     const row=[String(i+1),obs.species,obs.count+'·'+obs.sex,obs.location||'—',obs.note||''];
-    tx=mg;
-    const lineH=5;
-    let maxLines=1;
+    tx=mg; const lineH=5; let maxLines=1;
     row.forEach((cell,ci)=>{
       const lines=doc.splitTextToSize(cell,colW[ci]-2);
       maxLines=Math.max(maxLines,lines.length);
@@ -628,32 +614,28 @@ async function generatePDF(){
     ty+=maxLines*lineH+3;
   });
 
-  // ---- Page 3: Map with numbered pins ----
+  // Page 3: Map with green numbered pins
   doc.addPage();
   doc.setFont('helvetica','bold'); doc.setFontSize(12);
   const courtName=state.courtyard==='suedhof'?'Südhof':'Nordhof';
-  doc.text('Kartierung – '+courtName,mg,18);
+  doc.text('Kartierung – '+courtName, mg, 18);
   doc.line(mg,21,pw-mg,21);
 
-  // Load map image and draw it
   const imgSrc=MAP_IMAGES[state.courtyard];
   try{
     const mapDataUrl=await loadImageAsDataURL(imgSrc);
-    // Portrait map: fit within page leaving margins
     const mapX=mg, mapY=25;
-    const mapW=pw-2*mg;   // ~182mm
-    const mapH=mapW*(4/3); // preserve 3:4 ratio
+    const mapW=pw-2*mg;
+    const mapH=mapW*(4/3);
     const fitH=Math.min(mapH, ph-mapY-mg);
     const fitW=fitH*(3/4);
-    doc.addImage(mapDataUrl,'JPEG',mapX,mapY,fitW,fitH);
-
-    // Draw green numbered circles over saved observations
+    doc.addImage(mapDataUrl,'WEBP',mapX,mapY,fitW,fitH);
     state.observations.forEach((obs,i)=>{
       if(obs.x==null||obs.y==null) return;
-      const px=mapX + (obs.x/100)*fitW;
-      const py=mapY + (obs.y/100)*fitH;
+      const px=mapX+(obs.x/100)*fitW;
+      const py=mapY+(obs.y/100)*fitH;
       const r=4;
-      doc.setFillColor(26,125,56);  // #1a7d38
+      doc.setFillColor(26,125,56);
       doc.circle(px,py,r,'F');
       doc.setTextColor(255,255,255);
       doc.setFont('helvetica','bold'); doc.setFontSize(7);
@@ -664,13 +646,12 @@ async function generatePDF(){
     });
   } catch(err){
     doc.setFont('helvetica','normal'); doc.setFontSize(10);
-    doc.text('(Kartenbild nicht verfügbar – Pins werden als Koordinatenliste angegeben)',mg,30);
+    doc.text('(Kartenbild nicht verfügbar)',mg,30);
     state.observations.forEach((obs,i)=>{
       if(obs.x!=null) doc.text(`${i+1}. ${obs.species} – x:${obs.x.toFixed(1)}% y:${obs.y.toFixed(1)}%`,mg,42+i*8);
     });
   }
 
-  // Save
   const dateVal=document.getElementById('date').value||'2026-05-12';
   doc.save(`vogeldokumentation-${dateVal}-${state.courtyard}.pdf`);
 }
@@ -683,14 +664,13 @@ function loadImageAsDataURL(src){
       const c=document.createElement('canvas');
       c.width=img.naturalWidth; c.height=img.naturalHeight;
       c.getContext('2d').drawImage(img,0,0);
-      resolve(c.toDataURL('image/jpeg',0.85));
+      resolve(c.toDataURL('image/webp',0.85));
     };
     img.onerror=reject;
     img.src=src;
   });
 }
 
-// ── Screen management ─────────────────────────────────────────────
 function showScreen(name){
   state.screen=name;
   screens.forEach(s=>s.classList.toggle('active',s.dataset.screen===name));
@@ -700,7 +680,6 @@ function showScreen(name){
   ctaBar.classList.toggle('active',Boolean(ctas[name]));
   updateSummaryFields();
   wireButtons();
-
   if(name==='survey-overview'){
     renderObservations();
     renderOverviewMap(document.getElementById('overviewMap'));
@@ -718,12 +697,9 @@ function wireButtons(){
   document.querySelectorAll('.nav').forEach(btn=>{
     btn.onclick=()=>showScreen(btn.dataset.target);
   });
-
-  // Confirm location (map screen)
   const confirmBtn=document.getElementById('confirmLocation');
   if(confirmBtn) confirmBtn.onclick=()=>showScreen('review-save');
 
-  // Save observation
   const saveBtn=document.getElementById('saveObservation');
   if(saveBtn) saveBtn.onclick=()=>{
     const speciesText=document.getElementById('species').selectedOptions[0].textContent;
@@ -737,7 +713,6 @@ function wireButtons(){
       x:state.pendingMarker?.x??null,
       y:state.pendingMarker?.y??null
     });
-    // Reset form fields for next observation
     state.pendingMarker=null;
     document.getElementById('obsText').value='';
     document.getElementById('locationText').value='';
@@ -750,23 +725,19 @@ function wireButtons(){
     showScreen('survey-overview');
   };
 
-  // Generate PDF
   const pdfBtn=document.getElementById('generatePdf');
   if(pdfBtn) pdfBtn.onclick=async()=>{
-    pdfBtn.disabled=true;
-    pdfBtn.textContent='Erstelle PDF…';
+    pdfBtn.disabled=true; pdfBtn.textContent='Erstelle PDF…';
     try{ await generatePDF(); showScreen('export-done'); }
     catch(e){ alert('PDF-Fehler: '+e.message); }
     finally{ pdfBtn.disabled=false; pdfBtn.textContent='PDF erzeugen'; }
   };
 }
 
-// ── Event listeners ───────────────────────────────────────────────
 document.getElementById('themeToggle').addEventListener('click',()=>{
   const html=document.documentElement;
   html.setAttribute('data-theme',html.getAttribute('data-theme')==='dark'?'light':'dark');
 });
-
 document.getElementById('courtyardSelect').addEventListener('click',(e)=>{
   const btn=e.target.closest('button[data-court]');
   if(!btn) return;
@@ -774,27 +745,22 @@ document.getElementById('courtyardSelect').addEventListener('click',(e)=>{
   [...document.querySelectorAll('#courtyardSelect button')].forEach(b=>b.classList.toggle('active',b===btn));
   updateSummaryFields();
 });
-
 document.getElementById('behaviors').addEventListener('click',(e)=>{
   const chip=e.target.closest('.chip');
   if(!chip) return;
   chip.classList.toggle('active');
   renderReview();
 });
-
 ['date','time','temp','wind','weather','observer'].forEach(id=>{
   const el=document.getElementById(id);
   if(el) el.addEventListener('change',updateSummaryFields);
 });
-
 ['species','count','sex','obsText','locationText'].forEach(id=>{
   const el=document.getElementById(id);
   if(el){ el.addEventListener('input',renderReview); el.addEventListener('change',renderReview); }
 });
-
 backBtn.addEventListener('click',()=>showScreen(backMap[state.screen]||'home'));
 
-// ── Init ──────────────────────────────────────────────────────────
 updateSummaryFields();
 renderObservations();
 showScreen('home');
