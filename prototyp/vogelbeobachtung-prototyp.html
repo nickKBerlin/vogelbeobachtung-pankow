@@ -6,708 +6,798 @@
   <title>Vogelbeobachtung Prototyp</title>
   <link rel="preconnect" href="https://api.fontshare.com">
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
-    :root, [data-theme="light"] {
-      --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
-      --text-sm: clamp(0.875rem, 0.8rem + 0.35vw, 1rem);
-      --text-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
-      --text-lg: clamp(1.125rem, 1rem + 0.75vw, 1.5rem);
-      --text-xl: clamp(1.5rem, 1.2rem + 1.25vw, 2.25rem);
-      --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem; --space-4: 1rem;
-      --space-5: 1.25rem; --space-6: 1.5rem; --space-8: 2rem; --space-10: 2.5rem;
-      --space-12: 3rem; --space-16: 4rem;
-      --color-bg: #f7f6f2;
-      --color-surface: #f9f8f5;
-      --color-surface-2: #fbfbf9;
-      --color-surface-offset: #f3f0ec;
-      --color-border: #d4d1ca;
-      --color-divider: #dcd9d5;
-      --color-text: #28251d;
-      --color-text-muted: #6e6d67;
-      --color-text-faint: #9d9b94;
-      --color-primary: #01696f;
-      --color-primary-hover: #0c4e54;
-      --color-primary-highlight: #cedcd8;
-      --color-warning: #964219;
-      --radius-sm: 0.5rem; --radius-md: 0.75rem; --radius-lg: 1rem; --radius-xl: 1.25rem; --radius-full: 9999px;
-      --shadow-sm: 0 1px 2px rgba(0,0,0,.06);
-      --shadow-md: 0 10px 30px rgba(0,0,0,.08);
-      --transition: 180ms cubic-bezier(.16,1,.3,1);
-      --font-body: 'Satoshi', system-ui, sans-serif;
+    :root,[data-theme="light"]{
+      --text-xs:clamp(.75rem,.7rem + .25vw,.875rem);
+      --text-sm:clamp(.875rem,.8rem + .35vw,1rem);
+      --text-base:clamp(1rem,.95rem + .25vw,1.125rem);
+      --text-lg:clamp(1.125rem,1rem + .75vw,1.5rem);
+      --text-xl:clamp(1.5rem,1.2rem + 1.25vw,2.25rem);
+      --space-1:.25rem;--space-2:.5rem;--space-3:.75rem;--space-4:1rem;
+      --space-5:1.25rem;--space-6:1.5rem;--space-8:2rem;--space-10:2.5rem;
+      --space-12:3rem;--space-16:4rem;
+      --color-bg:#f7f6f2;--color-surface:#f9f8f5;--color-surface-2:#fbfbf9;
+      --color-surface-offset:#f3f0ec;--color-border:#d4d1ca;--color-divider:#dcd9d5;
+      --color-text:#28251d;--color-text-muted:#6e6d67;--color-text-faint:#9d9b94;
+      --color-primary:#01696f;--color-primary-hover:#0c4e54;--color-primary-highlight:#cedcd8;
+      --color-warning:#964219;
+      --radius-sm:.5rem;--radius-md:.75rem;--radius-lg:1rem;--radius-xl:1.25rem;--radius-full:9999px;
+      --shadow-sm:0 1px 2px rgba(0,0,0,.06);--shadow-md:0 10px 30px rgba(0,0,0,.08);
+      --transition:180ms cubic-bezier(.16,1,.3,1);
+      --font-body:'Satoshi',system-ui,sans-serif;
     }
-    [data-theme="dark"] {
-      --color-bg: #171614;
-      --color-surface: #1c1b19;
-      --color-surface-2: #201f1d;
-      --color-surface-offset: #242320;
-      --color-border: #393836;
-      --color-divider: #2b2926;
-      --color-text: #e0dfdc;
-      --color-text-muted: #a4a29c;
-      --color-text-faint: #7d7a74;
-      --color-primary: #4f98a3;
-      --color-primary-hover: #227f8b;
-      --color-primary-highlight: #313b3b;
-      --color-warning: #c57a54;
-      --shadow-sm: 0 1px 2px rgba(0,0,0,.25);
-      --shadow-md: 0 10px 30px rgba(0,0,0,.35);
+    [data-theme="dark"]{
+      --color-bg:#171614;--color-surface:#1c1b19;--color-surface-2:#201f1d;
+      --color-surface-offset:#242320;--color-border:#393836;--color-divider:#2b2926;
+      --color-text:#e0dfdc;--color-text-muted:#a4a29c;--color-text-faint:#7d7a74;
+      --color-primary:#4f98a3;--color-primary-hover:#227f8b;--color-primary-highlight:#313b3b;
+      --color-warning:#c57a54;
+      --shadow-sm:0 1px 2px rgba(0,0,0,.25);--shadow-md:0 10px 30px rgba(0,0,0,.35);
     }
-    * { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; background: var(--color-bg); color: var(--color-text); font-family: var(--font-body); }
-    body { min-height: 100vh; font-size: var(--text-base); }
-    button, input, select, textarea { font: inherit; color: inherit; }
-    button { cursor: pointer; border: 0; }
-    .app { max-width: 460px; margin: 0 auto; min-height: 100vh; background: var(--color-bg); position: relative; }
-    .topbar { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: var(--space-3); padding: var(--space-4); background: color-mix(in srgb, var(--color-bg) 90%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent); }
-    .topbar h1 { font-size: var(--text-sm); margin: 0; font-weight: 700; letter-spacing: .02em; }
-    .grow { flex: 1; }
-    .icon-btn { width: 44px; height: 44px; border-radius: var(--radius-full); background: var(--color-surface); border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent); display: inline-flex; align-items: center; justify-content: center; box-shadow: var(--shadow-sm); }
-    .screen { display: none; padding: var(--space-5) var(--space-4) calc(var(--space-16) + 76px); }
-    .screen.active { display: block; }
-    .eyebrow { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-xs); padding: .35rem .65rem; border-radius: var(--radius-full); background: var(--color-primary-highlight); color: var(--color-primary); font-weight: 700; letter-spacing: .03em; text-transform: uppercase; }
-    .hero { display: grid; gap: var(--space-4); margin-top: var(--space-2); }
-    .hero h2 { font-size: var(--text-xl); line-height: 1.05; margin: 0; }
-    .hero p, .muted { color: var(--color-text-muted); }
-    .panel { background: var(--color-surface); border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent); border-radius: var(--radius-xl); padding: var(--space-4); box-shadow: var(--shadow-sm); }
-    .stack { display: grid; gap: var(--space-4); }
-    .field { display: grid; gap: .45rem; }
-    .field label { font-size: var(--text-sm); font-weight: 700; }
-    .input, select, textarea { width: 100%; border-radius: var(--radius-md); border: 1px solid var(--color-border); background: var(--color-surface-2); padding: .9rem 1rem; min-height: 48px; }
-    textarea { min-height: 96px; resize: vertical; }
-    .segmented { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); }
-    .segmented button, .chip { min-height: 48px; border-radius: var(--radius-md); padding: .8rem 1rem; background: var(--color-surface-2); border: 1px solid var(--color-border); font-weight: 700; }
-    .segmented button.active, .chip.active { background: var(--color-primary-highlight); color: var(--color-primary); border-color: color-mix(in srgb, var(--color-primary) 30%, var(--color-border)); }
-    .chip-grid { display: flex; flex-wrap: wrap; gap: .55rem; }
-    .chip { min-height: auto; padding: .65rem .9rem; font-size: var(--text-sm); }
-    .primary, .secondary, .ghost { min-height: 52px; border-radius: var(--radius-lg); padding: .9rem 1rem; font-weight: 700; transition: transform var(--transition), background var(--transition), color var(--transition); }
-    .primary { background: var(--color-primary); color: #fff; }
-    .primary:hover { background: var(--color-primary-hover); }
-    .secondary { background: var(--color-surface); border: 1px solid var(--color-border); }
-    .ghost { background: transparent; color: var(--color-text-muted); }
-    .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
-    .cta { position: fixed; left: 50%; transform: translateX(-50%); bottom: 0; width: min(460px, 100%); padding: var(--space-3) var(--space-4) calc(var(--space-3) + env(safe-area-inset-bottom)); background: color-mix(in srgb, var(--color-bg) 94%, transparent); backdrop-filter: blur(12px); border-top: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent); display: none; gap: var(--space-3); }
-    .cta.active { display: grid; }
-    .card-list { display: grid; gap: var(--space-3); }
-    .obs-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-4); display: grid; gap: var(--space-3); }
-    .obs-top { display: flex; justify-content: space-between; gap: var(--space-3); align-items: start; }
-    .obs-title { margin: 0; font-size: var(--text-base); font-weight: 700; }
-    .obs-meta { font-size: var(--text-sm); color: var(--color-text-muted); }
-    .badge { display: inline-flex; align-items: center; padding: .35rem .65rem; border-radius: var(--radius-full); background: var(--color-surface-offset); font-size: var(--text-xs); font-weight: 700; white-space: nowrap; }
-    .map-card { background: linear-gradient(180deg, color-mix(in srgb, var(--color-primary-highlight) 45%, var(--color-surface-2)), var(--color-surface)); border: 1px solid var(--color-border); border-radius: var(--radius-xl); padding: var(--space-3); display: grid; gap: var(--space-3); }
-    .map-toolbar { display: flex; justify-content: space-between; align-items: center; gap: var(--space-2); }
-    .map { position: relative; width: 100%; aspect-ratio: 4 / 5; border-radius: calc(var(--radius-xl) - var(--space-3)); overflow: hidden; background: #ece8df; border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent); cursor: crosshair; }
-    .map svg { width: 100%; height: 100%; display: block; }
-    .marker { position: absolute; width: 18px; height: 18px; background: var(--color-primary); border: 3px solid #fff; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,.2); transform: translate(-50%, -50%); pointer-events: none; }
-    .marker::after { content: ''; position: absolute; inset: -7px; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--color-primary) 25%, transparent); }
-    .mini-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); }
-    .stat { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-3); }
-    .stat strong { display: block; font-size: var(--text-lg); }
-    .list-plain { display: grid; gap: var(--space-2); }
-    .list-item { display: flex; justify-content: space-between; gap: var(--space-3); padding: .8rem 0; border-bottom: 1px solid var(--color-divider); }
-    .list-item:last-child { border-bottom: 0; }
-    .preview-sheet { background: white; color: #222; border-radius: var(--radius-lg); padding: var(--space-4); box-shadow: var(--shadow-md); display: grid; gap: var(--space-3); }
-    .preview-sheet h3 { margin: 0; font-size: 1.1rem; }
-    .preview-table { width: 100%; border-collapse: collapse; font-size: .87rem; }
-    .preview-table th, .preview-table td { border: 1px solid #ddd; padding: .5rem; vertical-align: top; text-align: left; }
-    .hint { font-size: var(--text-xs); color: var(--color-text-muted); }
-    .success { background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface)); border: 1px solid color-mix(in srgb, var(--color-primary) 25%, var(--color-border)); }
-    .hidden { display: none !important; }
-    @media (min-width: 900px) {
-      body { padding: var(--space-8); }
-      .app { border-radius: 28px; box-shadow: var(--shadow-md); overflow: hidden; min-height: calc(100vh - 4rem); }
-      .cta { bottom: var(--space-8); border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent); border-radius: 24px; }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body)}
+    body{min-height:100vh;font-size:var(--text-base)}
+    button,input,select,textarea{font:inherit;color:inherit}
+    button{cursor:pointer;border:0}
+    .app{max-width:460px;margin:0 auto;min-height:100vh;background:var(--color-bg);position:relative}
+    .topbar{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:var(--space-3);padding:var(--space-4);background:color-mix(in srgb,var(--color-bg) 90%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid color-mix(in srgb,var(--color-border) 70%,transparent)}
+    .topbar h1{font-size:var(--text-sm);margin:0;font-weight:700;letter-spacing:.02em}
+    .grow{flex:1}
+    .icon-btn{width:44px;height:44px;border-radius:var(--radius-full);background:var(--color-surface);border:1px solid color-mix(in srgb,var(--color-border) 80%,transparent);display:inline-flex;align-items:center;justify-content:center;box-shadow:var(--shadow-sm)}
+    .screen{display:none;padding:var(--space-5) var(--space-4) calc(var(--space-16) + 76px)}
+    .screen.active{display:block}
+    .eyebrow{display:inline-flex;align-items:center;gap:var(--space-2);font-size:var(--text-xs);padding:.35rem .65rem;border-radius:var(--radius-full);background:var(--color-primary-highlight);color:var(--color-primary);font-weight:700;letter-spacing:.03em;text-transform:uppercase}
+    .hero{display:grid;gap:var(--space-4);margin-top:var(--space-2)}
+    .hero h2{font-size:var(--text-xl);line-height:1.05;margin:0}
+    .hero p,.muted{color:var(--color-text-muted)}
+    .panel{background:var(--color-surface);border:1px solid color-mix(in srgb,var(--color-border) 80%,transparent);border-radius:var(--radius-xl);padding:var(--space-4);box-shadow:var(--shadow-sm)}
+    .stack{display:grid;gap:var(--space-4)}
+    .field{display:grid;gap:.45rem}
+    .field label{font-size:var(--text-sm);font-weight:700}
+    .input,select,textarea{width:100%;border-radius:var(--radius-md);border:1px solid var(--color-border);background:var(--color-surface-2);padding:.9rem 1rem;min-height:48px}
+    textarea{min-height:96px;resize:vertical}
+    .segmented{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-2)}
+    .segmented button,.chip{min-height:48px;border-radius:var(--radius-md);padding:.8rem 1rem;background:var(--color-surface-2);border:1px solid var(--color-border);font-weight:700}
+    .segmented button.active,.chip.active{background:var(--color-primary-highlight);color:var(--color-primary);border-color:color-mix(in srgb,var(--color-primary) 30%,var(--color-border))}
+    .chip-grid{display:flex;flex-wrap:wrap;gap:.55rem}
+    .chip{min-height:auto;padding:.65rem .9rem;font-size:var(--text-sm)}
+    .primary,.secondary,.ghost{min-height:52px;border-radius:var(--radius-lg);padding:.9rem 1rem;font-weight:700;transition:transform var(--transition),background var(--transition),color var(--transition)}
+    .primary{background:var(--color-primary);color:#fff}
+    .primary:hover{background:var(--color-primary-hover)}
+    .secondary{background:var(--color-surface);border:1px solid var(--color-border)}
+    .ghost{background:transparent;color:var(--color-text-muted)}
+    .btn-row{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3)}
+    .cta{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:min(460px,100%);padding:var(--space-3) var(--space-4) calc(var(--space-3) + env(safe-area-inset-bottom));background:color-mix(in srgb,var(--color-bg) 94%,transparent);backdrop-filter:blur(12px);border-top:1px solid color-mix(in srgb,var(--color-border) 80%,transparent);display:none;gap:var(--space-3)}
+    .cta.active{display:grid}
+    .card-list{display:grid;gap:var(--space-3)}
+    .obs-card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:var(--space-4);display:grid;gap:var(--space-3)}
+    .obs-top{display:flex;justify-content:space-between;gap:var(--space-3);align-items:start}
+    .obs-title{margin:0;font-size:var(--text-base);font-weight:700}
+    .obs-meta{font-size:var(--text-sm);color:var(--color-text-muted)}
+    .badge{display:inline-flex;align-items:center;padding:.35rem .65rem;border-radius:var(--radius-full);background:var(--color-surface-offset);font-size:var(--text-xs);font-weight:700;white-space:nowrap}
+    .map-card{background:linear-gradient(180deg,color-mix(in srgb,var(--color-primary-highlight) 45%,var(--color-surface-2)),var(--color-surface));border:1px solid var(--color-border);border-radius:var(--radius-xl);padding:var(--space-3);display:grid;gap:var(--space-3)}
+    .map-toolbar{display:flex;justify-content:space-between;align-items:center;gap:var(--space-2)}
+    /* Map container: portrait ratio matching the real map images */
+    .map{position:relative;width:100%;aspect-ratio:3/4;border-radius:calc(var(--radius-xl) - var(--space-3));overflow:hidden;background:#ece8df;border:1px solid color-mix(in srgb,var(--color-border) 80%,transparent);cursor:crosshair}
+    .map img.map-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;user-select:none}
+    /* Numbered pin */
+    .pin{position:absolute;transform:translate(-50%,-100%);pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:2px}
+    .pin-circle{width:28px;height:28px;border-radius:50%;background:#1a7d38;border:2.5px solid #fff;box-shadow:0 3px 8px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;font-family:system-ui,sans-serif}
+    .pin-tail{width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:8px solid #1a7d38}
+    /* pending marker (not yet saved) uses lighter ring */
+    .pin.pending .pin-circle{background:#e8a020;border-color:#fff}
+    .pin.pending .pin-tail{border-top-color:#e8a020}
+    .mini-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-3)}
+    .stat{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:var(--space-3)}
+    .stat strong{display:block;font-size:var(--text-lg)}
+    .list-plain{display:grid;gap:var(--space-2)}
+    .list-item{display:flex;justify-content:space-between;gap:var(--space-3);padding:.8rem 0;border-bottom:1px solid var(--color-divider)}
+    .list-item:last-child{border-bottom:0}
+    .preview-sheet{background:white;color:#222;border-radius:var(--radius-lg);padding:var(--space-4);box-shadow:var(--shadow-md);display:grid;gap:var(--space-3)}
+    .preview-sheet h3{margin:0;font-size:1.1rem}
+    .preview-table{width:100%;border-collapse:collapse;font-size:.87rem}
+    .preview-table th,.preview-table td{border:1px solid #ddd;padding:.5rem;vertical-align:top;text-align:left}
+    .hint{font-size:var(--text-xs);color:var(--color-text-muted)}
+    .success{background:color-mix(in srgb,var(--color-primary) 10%,var(--color-surface));border:1px solid color-mix(in srgb,var(--color-primary) 25%,var(--color-border))}
+    .hidden{display:none!important}
+    @media(min-width:900px){
+      body{padding:var(--space-8)}
+      .app{border-radius:28px;box-shadow:var(--shadow-md);overflow:hidden;min-height:calc(100vh - 4rem)}
+      .cta{bottom:var(--space-8);border:1px solid color-mix(in srgb,var(--color-border) 80%,transparent);border-radius:24px}
     }
   </style>
 </head>
 <body>
-  <div class="app">
-    <div class="topbar">
-      <button class="icon-btn hidden" id="backBtn" aria-label="Zurück">←</button>
-      <h1 id="topTitle">Vogelbeobachtung</h1>
-      <div class="grow"></div>
-      <button class="icon-btn" id="themeToggle" aria-label="Farbschema wechseln">◐</button>
-    </div>
+<div class="app">
+  <div class="topbar">
+    <button class="icon-btn hidden" id="backBtn" aria-label="Zurück">←</button>
+    <h1 id="topTitle">Vogelbeobachtung</h1>
+    <div class="grow"></div>
+    <button class="icon-btn" id="themeToggle" aria-label="Farbschema wechseln">◐</button>
+  </div>
 
-    <!-- SCREEN 1: Startseite -->
-    <section class="screen active" data-screen="home">
-      <div class="hero">
-        <span class="eyebrow">Grüner Kiez Pankow</span>
-        <h2>Vogeldokumentation Grüner Kiez Pankow</h2>
-        <p>Beobachtungen schnell erfassen und als PDF exportieren.</p>
+  <!-- SCREEN 1 -->
+  <section class="screen active" data-screen="home">
+    <div class="hero">
+      <span class="eyebrow">Grüner Kiez Pankow</span>
+      <h2>Vogeldokumentation Grüner Kiez Pankow</h2>
+      <p>Beobachtungen schnell erfassen und als PDF exportieren.</p>
+    </div>
+    <div class="stack" style="margin-top:1.5rem">
+      <div class="panel stack">
+        <button class="primary nav" data-target="new-survey">Neue Erfassung</button>
       </div>
-      <div class="stack" style="margin-top: 1.5rem;">
-        <div class="panel stack">
+    </div>
+  </section>
+
+  <!-- SCREEN 2: Kopfdaten -->
+  <section class="screen" data-screen="new-survey">
+    <div class="stack">
+      <div>
+        <span class="eyebrow">Screen 2</span>
+        <h2 style="font-size:var(--text-xl);margin:.75rem 0 .35rem">Neue Erfassung</h2>
+        <p class="muted">Datum, Uhrzeit, Hof, Wetter und Beobachter eingeben.</p>
+      </div>
+      <div class="panel stack">
+        <div class="field">
+          <label for="date">Datum</label>
+          <input id="date" class="input" type="date" value="2026-05-12">
+          <div class="hint" id="dateDisplay">12.05.2026</div>
+        </div>
+        <div class="field">
+          <label for="time">Uhrzeit</label>
+          <input id="time" class="input" type="time" value="14:30">
+          <div class="hint">24-Stunden-Format, z. B. 18:30</div>
+        </div>
+        <div class="field">
+          <label>Hof</label>
+          <div class="segmented" id="courtyardSelect">
+            <button type="button" class="active" data-court="suedhof">Südhof</button>
+            <button type="button" data-court="nordhof">Nordhof</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="temp">Temperatur</label>
+          <div style="display:flex;gap:.5rem;align-items:center">
+            <input id="temp" class="input" type="number" value="16" style="flex:1">
+            <span style="font-weight:700;padding:.9rem .5rem">°C</span>
+          </div>
+        </div>
+        <div class="field">
+          <label for="wind">Wind</label>
+          <select id="wind">
+            <option>windstill</option>
+            <option selected>schwach</option>
+            <option>mäßig</option>
+            <option>stark</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="weather">Sonne / Niederschlag</label>
+          <select id="weather">
+            <option>sonnig</option>
+            <option selected>leicht bewölkt</option>
+            <option>bewölkt</option>
+            <option>Regen</option>
+            <option>wechselhaft</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="observer">Erfassung durch</label>
+          <input id="observer" class="input" type="text" value="Kiez-Team">
+        </div>
+        <div class="field">
+          <label for="notes">Besonderheiten / Bemerkungen</label>
+          <textarea id="notes">Ruhiger Nachmittag, gute Sicht im südlichen Gartenbereich.</textarea>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 3: Übersicht -->
+  <section class="screen" data-screen="survey-overview">
+    <div class="stack">
+      <div>
+        <span class="eyebrow">Screen 3</span>
+        <h2 style="font-size:var(--text-xl);margin:.75rem 0 .35rem">Erfassung vom <span id="overviewDate">12.05.2026</span></h2>
+        <p class="muted"><span id="courtLabel">Südhof</span> · <span id="overviewTime">14:30</span> Uhr</p>
+      </div>
+      <div class="mini-stats">
+        <div class="stat"><span class="hint">Beobachtungen</span><strong id="obsCount">0</strong></div>
+        <div class="stat"><span class="hint">Hof</span><strong id="courtLabelMini">Südhof</strong></div>
+        <div class="stat"><span class="hint">Temperatur</span><strong id="tempDisplay">16°C</strong></div>
+      </div>
+      <div class="panel list-plain">
+        <div class="list-item"><span>Datum</span><strong id="summaryDate">12.05.2026</strong></div>
+        <div class="list-item"><span>Uhrzeit</span><strong id="summaryTime">14:30</strong></div>
+        <div class="list-item"><span>Wind</span><strong id="summaryWind">schwach</strong></div>
+        <div class="list-item"><span>Sonne / Niederschlag</span><strong id="summaryWeather">leicht bewölkt</strong></div>
+        <div class="list-item"><span>Erfassung durch</span><strong id="summaryObserver">Kiez-Team</strong></div>
+      </div>
+      <div class="map-card">
+        <div class="map-toolbar">
+          <div>
+            <strong>Kartierung</strong>
+            <div class="hint">Alle eingetragenen Beobachtungspunkte.</div>
+          </div>
+        </div>
+        <div class="map" id="overviewMap"></div>
+      </div>
+      <div class="panel stack">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem">
+          <div>
+            <h3 style="margin:0;font-size:var(--text-lg)">Beobachtungen</h3>
+            <p class="muted" style="margin:.2rem 0 0">Nummerierte Liste aller Einträge.</p>
+          </div>
+          <button class="secondary nav" data-target="observation-form">Hinzufügen</button>
+        </div>
+        <div class="card-list" id="observationList"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 4: Beobachtung -->
+  <section class="screen" data-screen="observation-form">
+    <div class="stack">
+      <div>
+        <span class="eyebrow">Screen 4</span>
+        <h2 style="font-size:var(--text-xl);margin:.75rem 0 .35rem">Beobachtung hinzufügen</h2>
+        <p class="muted">Art, Anzahl, Geschlecht, Verhalten und Beschreibung eingeben.</p>
+      </div>
+      <div class="panel stack">
+        <div class="field">
+          <label for="species">Art</label>
+          <select id="species">
+            <option value="H">H – Haussperling</option>
+            <option value="Bm">Bm – Blaumeise</option>
+            <option value="K">K – Kohlmeise</option>
+            <option value="Wb">Wb – Waldbaumläufer</option>
+            <option value="KL">KL – Kleiber</option>
+            <option value="Bs">Bs – Buntspecht</option>
+            <option value="Gü">Gü – Grünspecht</option>
+            <option value="R">R – Rotkehlchen</option>
+            <option value="S" selected>S – Star</option>
+            <option value="E">E – Elster</option>
+            <option value="Rt">Rt – Ringeltaube</option>
+            <option value="Nk">Nk – Nebelkrähe</option>
+          </select>
+        </div>
+        <div class="btn-row">
+          <div class="field">
+            <label for="count">Anzahl</label>
+            <input id="count" class="input" type="number" value="1" min="1">
+          </div>
+          <div class="field">
+            <label for="sex">Geschlecht</label>
+            <select id="sex">
+              <option>nicht erkannt</option>
+              <option>Männchen</option>
+              <option>Weibchen</option>
+              <option>gemischtes Paar</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Verhalten</label>
+          <div class="chip-grid" id="behaviors">
+            <button type="button" class="chip active">Nahrungssuche</button>
+            <button type="button" class="chip">Reviergesang</button>
+            <button type="button" class="chip">Balz</button>
+            <button type="button" class="chip">Warnrufe</button>
+            <button type="button" class="chip">Nestbau</button>
+            <button type="button" class="chip">Brutnachweis</button>
+            <button type="button" class="chip">Flugbewegung</button>
+            <button type="button" class="chip">Füttern</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="locationText">Wo beobachtet?</label>
+          <input id="locationText" class="input" type="text" placeholder="z. B. Konzertwiese, Gebüsch Ossietzkystr. 26">
+        </div>
+        <div class="field">
+          <label for="obsText">Was beobachtet / gehört?</label>
+          <textarea id="obsText" placeholder="z. B. singt, fliegt, pickt Nahrung, balzt"></textarea>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 5: Karte -->
+  <section class="screen" data-screen="map-screen">
+    <div class="stack">
+      <div>
+        <span class="eyebrow">Screen 5</span>
+        <h2 style="font-size:var(--text-xl);margin:.75rem 0 .35rem">Ort auf Karte markieren</h2>
+        <p class="muted">Tippe auf die Karte, um den Beobachtungsort zu setzen. Verschiebbar bis „Ort übernehmen“.</p>
+      </div>
+      <div class="panel stack success">
+        <div><strong>Aktuelle Beobachtung</strong></div>
+        <div class="hint" id="currentObsSummary">— noch keine Angaben —</div>
+      </div>
+      <div class="map-card">
+        <div class="map-toolbar">
+          <strong id="mapTitle">Südhof-Karte</strong>
+          <span class="badge">Tippen zum Markieren</span>
+        </div>
+        <div class="map" id="interactiveMap"></div>
+        <div class="field">
+          <label for="mapLocationText">Ortsbeschreibung</label>
+          <input id="mapLocationText" class="input" type="text" placeholder="z. B. Konzertwiese, Gebüsch Ossietzkystr. 26">
+        </div>
+        <div class="field">
+          <label for="movementText">Flugbewegung (optional)</label>
+          <input id="movementText" class="input" type="text" placeholder="z. B. von Kavalierstraße 25 Richtung Gartenbereich">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 6: Prüfen -->
+  <section class="screen" data-screen="review-save">
+    <div class="stack">
+      <div>
+        <span class="eyebrow">Screen 6</span>
+        <h2 style="font-size:var(--text-xl);margin:.75rem 0 .35rem">Prüfen und speichern</h2>
+        <p class="muted">Zusammenfassung vor dem Speichern.</p>
+      </div>
+      <div class="panel stack" id="reviewPanel"></div>
+    </div>
+  </section>
+
+  <!-- SCREEN 7: PDF-Vorschau -->
+  <section class="screen" data-screen="export-preview">
+    <div class="stack">
+      <div>
+        <span class="eyebrow">Screen 7</span>
+        <h2 style="font-size:var(--text-xl);margin:.75rem 0 .35rem">PDF-Export vorbereiten</h2>
+        <p class="muted">Kopfdaten + Beobachtungstabelle + Karte mit Nummern als separater Anhang.</p>
+      </div>
+      <div class="preview-sheet">
+        <h3>Vogeldokumentation „Grüner Kiez Pankow“ 2026</h3>
+        <div class="list-plain">
+          <div class="list-item"><span>Datum</span><strong id="pdfDate">12.05.2026</strong></div>
+          <div class="list-item"><span>Uhrzeit</span><strong id="pdfTime">14:30</strong></div>
+          <div class="list-item"><span>Ort</span><strong id="pdfCourt">Südhof</strong></div>
+          <div class="list-item"><span>Temperatur</span><strong id="pdfTemp">16°C</strong></div>
+          <div class="list-item"><span>Wind</span><strong id="pdfWind">schwach</strong></div>
+          <div class="list-item"><span>Sonne / Niederschlag</span><strong id="pdfWeather">leicht bewölkt</strong></div>
+          <div class="list-item"><span>Erfassung durch</span><strong id="pdfObserver">Kiez-Team</strong></div>
+        </div>
+        <table class="preview-table">
+          <thead>
+            <tr><th>#</th><th>Art</th><th>Anzahl·Geschlecht</th><th>Wo beobachtet?</th><th>Was beobachtet/gehört?</th></tr>
+          </thead>
+          <tbody id="previewRows"></tbody>
+        </table>
+        <div class="hint">+ Kartenanhang mit grünen Nummern wird als letzte Seite angehängt.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 8: Export done -->
+  <section class="screen" data-screen="export-done">
+    <div class="stack">
+      <div>
+        <span class="eyebrow">Screen 8</span>
+        <h2 style="font-size:var(--text-xl);margin:.75rem 0 .35rem">Export abgeschlossen</h2>
+      </div>
+      <div class="panel stack success">
+        <div><strong>PDF wurde heruntergeladen</strong></div>
+        <div class="muted" id="exportFilename">vogeldokumentation-2026-05-12-suedhof.pdf</div>
+        <div class="btn-row">
+          <button class="secondary nav" data-target="home">Zur Startseite</button>
           <button class="primary nav" data-target="new-survey">Neue Erfassung</button>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <!-- SCREEN 2: Neue Erfassung (Kopfdaten) -->
-    <section class="screen" data-screen="new-survey">
-      <div class="stack">
+  <div class="cta" id="ctaBar"></div>
+</div>
+
+<script>
+const MAP_IMAGES = {
+  suedhof: 'karte-suedhof.jpg',
+  nordhof: 'karte-nordhof.jpg'
+};
+
+const state = {
+  screen: 'home',
+  courtyard: 'suedhof',
+  pendingMarker: null,   // {x,y} percent — current unsaved pin
+  observations: []
+};
+
+const screens = [...document.querySelectorAll('.screen')];
+const topTitle = document.getElementById('topTitle');
+const backBtn  = document.getElementById('backBtn');
+const ctaBar   = document.getElementById('ctaBar');
+
+const titles = {
+  home:'Vogelbeobachtung','new-survey':'Neue Erfassung',
+  'survey-overview':'Erfassung','observation-form':'Beobachtung',
+  'map-screen':'Karte','review-save':'Prüfen',
+  'export-preview':'PDF-Vorschau','export-done':'Export'
+};
+const backMap = {
+  'new-survey':'home','survey-overview':'home',
+  'observation-form':'survey-overview','map-screen':'observation-form',
+  'review-save':'map-screen','export-preview':'survey-overview','export-done':'export-preview'
+};
+const ctas = {
+  home:'',
+  'new-survey':`<button class="secondary nav" data-target="home">Abbrechen</button><button class="primary nav" data-target="survey-overview">Erfassung starten</button>`,
+  'survey-overview':`<button class="secondary nav" data-target="export-preview">PDF exportieren</button><button class="primary nav" data-target="observation-form">Beobachtung hinzufügen</button>`,
+  'observation-form':`<button class="secondary nav" data-target="survey-overview">Zurück</button><button class="primary nav" data-target="map-screen">Weiter zur Karte</button>`,
+  'map-screen':`<button class="secondary nav" data-target="observation-form">Zurück</button><button class="primary" id="confirmLocation">Ort übernehmen</button>`,
+  'review-save':`<button class="secondary nav" data-target="map-screen">Ort bearbeiten</button><button class="primary" id="saveObservation">Jetzt speichern</button>`,
+  'export-preview':`<button class="secondary nav" data-target="survey-overview">Zurück</button><button class="primary" id="generatePdf">PDF erzeugen</button>`,
+  'export-done':`<button class="secondary nav" data-target="home">Zur Übersicht</button><button class="primary nav" data-target="new-survey">Neue Erfassung</button>`
+};
+
+function formatDate(iso){
+  if(!iso) return '';
+  const [y,m,d]=iso.split('-');
+  return `${d}.${m}.${y}`;
+}
+
+// ── Map rendering ────────────────────────────────────────────────
+function buildPin(num, x, y, pending=false){
+  const pin=document.createElement('div');
+  pin.className='pin'+(pending?' pending':'');
+  pin.style.left=x+'%';
+  pin.style.top=y+'%';
+  pin.innerHTML=`<div class="pin-circle">${num}</div><div class="pin-tail"></div>`;
+  return pin;
+}
+
+function renderOverviewMap(container){
+  container.innerHTML='';
+  const img=document.createElement('img');
+  img.className='map-bg';
+  img.src=MAP_IMAGES[state.courtyard];
+  img.alt=state.courtyard==='suedhof'?'Südhof-Karte':'Nordhof-Karte';
+  container.appendChild(img);
+  state.observations.forEach((obs,i)=>{
+    if(obs.x!=null && obs.y!=null){
+      container.appendChild(buildPin(i+1, obs.x, obs.y));
+    }
+  });
+}
+
+function renderInteractiveMap(container){
+  container.innerHTML='';
+  const img=document.createElement('img');
+  img.className='map-bg';
+  img.src=MAP_IMAGES[state.courtyard];
+  img.alt=state.courtyard==='suedhof'?'Südhof-Karte':'Nordhof-Karte';
+  container.appendChild(img);
+
+  // Draw saved observations (fixed, green)
+  state.observations.forEach((obs,i)=>{
+    if(obs.x!=null && obs.y!=null){
+      container.appendChild(buildPin(i+1, obs.x, obs.y));
+    }
+  });
+
+  // Draw pending marker (orange, next number)
+  const nextNum = state.observations.length+1;
+  if(state.pendingMarker){
+    container.appendChild(buildPin(nextNum, state.pendingMarker.x, state.pendingMarker.y, true));
+  }
+
+  // Click handler
+  container.onclick=(e)=>{
+    const r=container.getBoundingClientRect();
+    const x=Math.max(3,Math.min(97,((e.clientX-r.left)/r.width)*100));
+    const y=Math.max(3,Math.min(97,((e.clientY-r.top)/r.height)*100));
+    state.pendingMarker={x,y};
+    renderInteractiveMap(container);
+  };
+}
+
+// ── Summary helpers ───────────────────────────────────────────────
+function set(id,val){const el=document.getElementById(id);if(el)el.textContent=val;}
+
+function updateSummaryFields(){
+  const dateVal =document.getElementById('date').value;
+  const timeVal =document.getElementById('time').value;
+  const tempVal =document.getElementById('temp').value;
+  const windVal =document.getElementById('wind').value;
+  const weatherVal=document.getElementById('weather').value;
+  const obsVal  =document.getElementById('observer').value;
+  const fmt=formatDate(dateVal);
+  set('dateDisplay',fmt); set('overviewDate',fmt); set('summaryDate',fmt); set('pdfDate',fmt);
+  set('overviewTime',timeVal); set('summaryTime',timeVal); set('pdfTime',timeVal);
+  set('tempDisplay',tempVal+'°C'); set('pdfTemp',tempVal+'°C');
+  set('summaryWind',windVal); set('pdfWind',windVal);
+  set('summaryWeather',weatherVal); set('pdfWeather',weatherVal);
+  set('summaryObserver',obsVal); set('pdfObserver',obsVal);
+  const court=state.courtyard==='suedhof'?'Südhof':'Nordhof';
+  set('courtLabel',court); set('courtLabelMini',court); set('pdfCourt',court);
+  set('exportFilename',`vogeldokumentation-${dateVal||'2026-05-12'}-${state.courtyard}.pdf`);
+}
+
+function renderObservations(){
+  set('obsCount',String(state.observations.length));
+  const list=document.getElementById('observationList');
+  const rows=document.getElementById('previewRows');
+  if(list) list.innerHTML=state.observations.map((obs,i)=>`
+    <div class="obs-card">
+      <div class="obs-top">
         <div>
-          <span class="eyebrow">Screen 2</span>
-          <h2 style="font-size: var(--text-xl); margin: .75rem 0 .35rem;">Neue Erfassung</h2>
-          <p class="muted">Kopfdaten der Erfassung eingeben: Datum, Uhrzeit, Hof, Wetter, Beobachter und Bemerkungen.</p>
+          <p class="obs-title">${i+1}. ${obs.species}</p>
+          <p class="obs-meta">${obs.count} Ind. · ${obs.sex} · ${obs.location||'—'}</p>
         </div>
-        <div class="panel stack">
-          <div class="field">
-            <label for="date">Datum</label>
-            <input id="date" class="input" type="date" value="2026-05-07" />
-            <div class="hint" id="dateDisplay">07.05.2026</div>
-          </div>
-          <div class="field">
-            <label for="time">Uhrzeit</label>
-            <input id="time" class="input" type="time" value="14:30" />
-            <div class="hint">24-Stunden-Format, z. B. 18:30</div>
-          </div>
-          <div class="field">
-            <label>Ort</label>
-            <div class="segmented" id="courtyardSelect">
-              <button type="button" class="active" data-court="suedhof">Südhof</button>
-              <button type="button" data-court="nordhof">Nordhof</button>
-            </div>
-          </div>
-          <div class="field">
-            <label for="temp">Temperatur</label>
-            <div style="display:flex; gap: .5rem; align-items: center;">
-              <input id="temp" class="input" type="number" value="16" placeholder="16" style="flex:1;" />
-              <span style="font-weight:700; font-size: var(--text-base); padding: .9rem .5rem;">°C</span>
-            </div>
-          </div>
-          <div class="field">
-            <label for="wind">Wind</label>
-            <select id="wind">
-              <option>windstill</option>
-              <option selected>schwach</option>
-              <option>mäßig</option>
-              <option>stark</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="weather">Sonne / Niederschlag</label>
-            <select id="weather">
-              <option>sonnig</option>
-              <option selected>leicht bewölkt</option>
-              <option>bewölkt</option>
-              <option>Regen</option>
-              <option>wechselhaft</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="observer">Erfassung durch</label>
-            <input id="observer" class="input" type="text" value="Kiez-Team" />
-          </div>
-          <div class="field">
-            <label for="notes">Besonderheiten / Bemerkungen</label>
-            <textarea id="notes">Ruhiger Nachmittag, gute Sicht im südlichen Gartenbereich.</textarea>
-          </div>
-        </div>
+        <span class="badge">${obs.behaviors[0]||'Beobachtung'}</span>
       </div>
-    </section>
+      <div class="muted">${obs.note||''}</div>
+    </div>`).join('');
+  if(rows) rows.innerHTML=state.observations.map((obs,i)=>`
+    <tr>
+      <td>${i+1}</td><td>${obs.species}</td>
+      <td>${obs.count}·${obs.sex}</td>
+      <td>${obs.location||'—'}</td>
+      <td>${obs.note||''}</td>
+    </tr>`).join('');
+}
 
-    <!-- SCREEN 3: Erfassungsübersicht -->
-    <section class="screen" data-screen="survey-overview">
-      <div class="stack">
-        <div>
-          <span class="eyebrow">Screen 3</span>
-          <h2 style="font-size: var(--text-xl); margin: .75rem 0 .35rem;">Erfassung vom <span id="overviewDate">07.05.2026</span></h2>
-          <p class="muted"><span id="courtLabel">Südhof</span> · <span id="overviewTime">14:30</span> Uhr</p>
-        </div>
-        <div class="mini-stats">
-          <div class="stat"><span class="hint">Beobachtungen</span><strong id="obsCount">6</strong></div>
-          <div class="stat"><span class="hint">Hof</span><strong id="courtLabelMini">Südhof</strong></div>
-          <div class="stat"><span class="hint">Temperatur</span><strong id="tempDisplay">16°C</strong></div>
-        </div>
-        <div class="panel list-plain">
-          <div class="list-item"><span>Datum</span><strong id="summaryDate">07.05.2026</strong></div>
-          <div class="list-item"><span>Uhrzeit</span><strong id="summaryTime">14:30</strong></div>
-          <div class="list-item"><span>Wind</span><strong id="summaryWind">schwach</strong></div>
-          <div class="list-item"><span>Sonne / Niederschlag</span><strong id="summaryWeather">leicht bewölkt</strong></div>
-          <div class="list-item"><span>Erfassung durch</span><strong id="summaryObserver">Kiez-Team</strong></div>
-        </div>
-        <div class="map-card">
-          <div class="map-toolbar">
-            <div>
-              <strong>Kartierung</strong>
-              <div class="hint">Alle eingetragenen Beobachtungspunkte auf einen Blick.</div>
-            </div>
-            <button class="secondary nav" data-target="map-screen">Karte öffnen</button>
-          </div>
-          <div class="map" id="overviewMap"></div>
-        </div>
-        <div class="panel stack">
-          <div style="display:flex; justify-content:space-between; align-items:center; gap:1rem;">
-            <div>
-              <h3 style="margin:0; font-size: var(--text-lg);">Beobachtungen</h3>
-              <p class="muted" style="margin:.2rem 0 0;">Digitale Version der nummerierten Formularzeilen.</p>
-            </div>
-            <button class="secondary nav" data-target="observation-form">Hinzufügen</button>
-          </div>
-          <div class="card-list" id="observationList"></div>
-        </div>
-      </div>
-    </section>
+function renderReview(){
+  const speciesText=document.getElementById('species').selectedOptions[0].textContent;
+  const count=document.getElementById('count').value||'1';
+  const sex=document.getElementById('sex').value;
+  const behaviors=[...document.querySelectorAll('#behaviors .chip.active')].map(el=>el.textContent.trim());
+  const obsText=document.getElementById('obsText').value;
+  const location=document.getElementById('mapLocationText')?.value||document.getElementById('locationText')?.value||'—';
+  const panel=document.getElementById('reviewPanel');
+  if(panel) panel.innerHTML=`
+    <div class="list-item"><span>Art</span><strong>${speciesText}</strong></div>
+    <div class="list-item"><span>Anzahl</span><strong>${count}</strong></div>
+    <div class="list-item"><span>Geschlecht</span><strong>${sex}</strong></div>
+    <div class="list-item"><span>Verhalten</span><strong>${behaviors.join(', ')||'—'}</strong></div>
+    <div class="list-item"><span>Ort</span><strong>${location}</strong></div>
+    <div class="list-item"><span>Kartenpin</span><strong>${state.pendingMarker?'gesetzt (Nr.'+(state.observations.length+1)+')':'— kein Pin gesetzt'}</strong></div>
+    <div class="panel" style="background:var(--color-surface-2);margin-top:.5rem">${obsText||'—'}</div>`;
+  const summary=document.getElementById('currentObsSummary');
+  if(summary) summary.textContent=`${speciesText} · ${count} Ind. · ${behaviors.join(', ')||'—'}`;
+}
 
-    <!-- SCREEN 4: Beobachtung hinzufügen -->
-    <section class="screen" data-screen="observation-form">
-      <div class="stack">
-        <div>
-          <span class="eyebrow">Screen 4</span>
-          <h2 style="font-size: var(--text-xl); margin: .75rem 0 .35rem;">Beobachtung hinzufügen</h2>
-          <p class="muted">Art bestimmen, Anzahl und Geschlecht angeben, Verhalten auswählen und Beobachtung beschreiben.</p>
-        </div>
-        <div class="panel stack">
-          <div class="field">
-            <label for="species">Art</label>
-            <select id="species">
-              <option value="H">H – Haussperling</option>
-              <option value="Bm">Bm – Blaumeise</option>
-              <option value="K">K – Kohlmeise</option>
-              <option value="Wb">Wb – Waldbaumläufer</option>
-              <option value="KL">KL – Kleiber</option>
-              <option value="Bs">Bs – Buntspecht</option>
-              <option value="Gü">Gü – Grünspecht</option>
-              <option value="R">R – Rotkehlchen</option>
-              <option value="S" selected>S – Star</option>
-              <option value="E">E – Elster</option>
-              <option value="Rt">Rt – Ringeltaube</option>
-              <option value="Nk">Nk – Nebelkrähe</option>
-            </select>
-            <div class="hint">Kürzel + deutschen Namen auswählen.</div>
-          </div>
-          <div class="btn-row">
-            <div class="field">
-              <label for="count">Anzahl</label>
-              <input id="count" class="input" type="number" value="1" min="1" />
-              <div class="hint">Anzahl der Individuen</div>
-            </div>
-            <div class="field">
-              <label for="sex">Geschlecht</label>
-              <select id="sex">
-                <option>nicht erkannt</option>
-                <option>Männchen</option>
-                <option>Weibchen</option>
-                <option>gemischtes Paar</option>
-              </select>
-              <div class="hint">Nur auswählen wenn sicher erkennbar.</div>
-            </div>
-          </div>
-          <div class="field">
-            <label>Verhalten</label>
-            <div class="chip-grid" id="behaviors">
-              <button type="button" class="chip active">Nahrungssuche</button>
-              <button type="button" class="chip">Reviergesang</button>
-              <button type="button" class="chip">Balz</button>
-              <button type="button" class="chip">Warnrufe</button>
-              <button type="button" class="chip">Nestbau</button>
-              <button type="button" class="chip">Brutnachweis</button>
-              <button type="button" class="chip">Flugbewegung</button>
-              <button type="button" class="chip">Füttern</button>
-            </div>
-          </div>
-          <div class="field">
-            <label for="locationText">Wo beobachtet?</label>
-            <input id="locationText" class="input" type="text" placeholder="z. B. Konzertwiese, Gebüsch Ossietzkystr. 26, Kavalierstraße 25 Dach" />
-          </div>
-          <div class="field">
-            <label for="obsText">Was beobachtet / gehört?</label>
-            <textarea id="obsText" placeholder="z. B. singt, fliegt, pickt Nahrung, balzt, ruft, brütet"></textarea>
-          </div>
-        </div>
-      </div>
-    </section>
+// ── PDF Export ────────────────────────────────────────────────────
+async function generatePDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  const pw=210, ph=297, mg=14;
 
-    <!-- SCREEN 5: Ort auf Karte markieren -->
-    <section class="screen" data-screen="map-screen">
-      <div class="stack">
-        <div>
-          <span class="eyebrow">Screen 5</span>
-          <h2 style="font-size: var(--text-xl); margin: .75rem 0 .35rem;">Ort auf Karte markieren</h2>
-          <p class="muted">Setze einen Punkt auf der Karte und ergänze bei Bedarf eine Ortsbeschreibung oder Bewegungsnotiz.</p>
-        </div>
-        <div class="panel stack success">
-          <div><strong>Aktuelle Beobachtung</strong></div>
-          <div class="hint" id="currentObsSummary">— noch keine Angaben —</div>
-        </div>
-        <div class="map-card">
-          <div class="map-toolbar">
-            <strong id="mapTitle">Südhof-Karte</strong>
-            <span class="badge">Tippen zum Markieren</span>
-          </div>
-          <div class="map" id="interactiveMap"></div>
-          <div class="field">
-            <label for="mapLocationText">Ortsbeschreibung</label>
-            <input id="mapLocationText" class="input" type="text" placeholder="z. B. Konzertwiese, Gebüsch Ossietzkystr. 26, Kavalierstr. 25 Dach" />
-          </div>
-          <div class="field">
-            <label for="movementText">Flugbewegung (optional)</label>
-            <input id="movementText" class="input" type="text" placeholder="z. B. von Kavalierstraße 25 Richtung Gartenbereich" />
-          </div>
-        </div>
-      </div>
-    </section>
+  // ---- Page 1: Header + Metadata ----
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(14);
+  doc.text('Vogeldokumentation „Grüner Kiez Pankow“ 2026', mg, 20);
+  doc.setDrawColor(180);
+  doc.line(mg, 23, pw-mg, 23);
 
-    <!-- SCREEN 6: Beobachtung prüfen und speichern -->
-    <section class="screen" data-screen="review-save">
-      <div class="stack">
-        <div>
-          <span class="eyebrow">Screen 6</span>
-          <h2 style="font-size: var(--text-xl); margin: .75rem 0 .35rem;">Prüfen und speichern</h2>
-          <p class="muted">Kurze Zusammenfassung vor dem Speichern. Bei Bedarf zurück zum Bearbeiten.</p>
-        </div>
-        <div class="panel stack" id="reviewPanel"></div>
-      </div>
-    </section>
+  const meta=[
+    ['Datum', document.getElementById('pdfDate').textContent],
+    ['Uhrzeit', document.getElementById('pdfTime').textContent+' Uhr'],
+    ['Ort', document.getElementById('pdfCourt').textContent],
+    ['Temperatur', document.getElementById('pdfTemp').textContent],
+    ['Wind', document.getElementById('pdfWind').textContent],
+    ['Sonne / Niederschlag', document.getElementById('pdfWeather').textContent],
+    ['Erfassung durch', document.getElementById('pdfObserver').textContent],
+    ['Bemerkungen', document.getElementById('notes').value||'—'],
+  ];
+  doc.setFontSize(10);
+  let y=30;
+  meta.forEach(([label,val])=>{
+    doc.setFont('helvetica','bold'); doc.text(label+':',mg,y);
+    doc.setFont('helvetica','normal'); doc.text(val,70,y);
+    y+=7;
+  });
 
-    <!-- SCREEN 7: PDF-Export Vorschau -->
-    <section class="screen" data-screen="export-preview">
-      <div class="stack">
-        <div>
-          <span class="eyebrow">Screen 7</span>
-          <h2 style="font-size: var(--text-xl); margin: .75rem 0 .35rem;">PDF-Export vorbereiten</h2>
-          <p class="muted">Die Ausgabe bleibt optisch nah am bisherigen Formular. Kartierung wird als Anhang beigefügt.</p>
-        </div>
-        <div class="preview-sheet">
-          <h3>Vogeldokumentation „Grüner Kiez Pankow" 2026</h3>
-          <div class="list-plain">
-            <div class="list-item"><span>Datum</span><strong id="pdfDate">07.05.2026</strong></div>
-            <div class="list-item"><span>Uhrzeit</span><strong id="pdfTime">14:30</strong></div>
-            <div class="list-item"><span>Ort</span><strong id="pdfCourt">Südhof</strong></div>
-            <div class="list-item"><span>Temperatur</span><strong id="pdfTemp">16°C</strong></div>
-            <div class="list-item"><span>Wind</span><strong id="pdfWind">schwach</strong></div>
-            <div class="list-item"><span>Sonne / Niederschlag</span><strong id="pdfWeather">leicht bewölkt</strong></div>
-            <div class="list-item"><span>Erfassung durch</span><strong id="pdfObserver">Kiez-Team</strong></div>
-          </div>
-          <table class="preview-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Art</th>
-                <th>Anzahl · Geschlecht</th>
-                <th>Wo beobachtet?</th>
-                <th>Was beobachtet / gehört?</th>
-              </tr>
-            </thead>
-            <tbody id="previewRows"></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
+  // ---- Page 2: Observation table ----
+  doc.addPage();
+  doc.setFont('helvetica','bold'); doc.setFontSize(12);
+  doc.text('Beobachtungen',mg,18);
+  doc.line(mg,21,pw-mg,21);
 
-    <!-- SCREEN 8: Export abgeschlossen -->
-    <section class="screen" data-screen="export-done">
-      <div class="stack">
-        <div>
-          <span class="eyebrow">Screen 8</span>
-          <h2 style="font-size: var(--text-xl); margin: .75rem 0 .35rem;">Export abgeschlossen</h2>
-          <p class="muted">Im finalen Produkt wird die PDF-Datei hier geöffnet oder heruntergeladen.</p>
-        </div>
-        <div class="panel stack success">
-          <div><strong>Datei bereit</strong></div>
-          <div class="muted" id="exportFilename">vogeldokumentation-2026-05-07-suedhof.pdf</div>
-          <div class="btn-row">
-            <button class="secondary nav" data-target="home">Zur Startseite</button>
-            <button class="primary nav" data-target="new-survey">Neue Erfassung</button>
-          </div>
-        </div>
-      </div>
-    </section>
+  const colW=[8,42,32,46,pw-mg-mg-8-42-32-46];
+  const headers=['#','Art','Anzahl·Geschlecht','Wo beobachtet?','Was beobachtet/gehört?'];
+  let tx=mg; let ty=28;
+  doc.setFontSize(8); doc.setFont('helvetica','bold');
+  headers.forEach((h,i)=>{ doc.text(h,tx+1,ty); tx+=colW[i]; });
+  doc.line(mg,ty+2,pw-mg,ty+2);
+  ty+=6;
+  doc.setFont('helvetica','normal');
+  state.observations.forEach((obs,i)=>{
+    const row=[String(i+1),obs.species,obs.count+'·'+obs.sex,obs.location||'—',obs.note||''];
+    tx=mg;
+    const lineH=5;
+    let maxLines=1;
+    row.forEach((cell,ci)=>{
+      const lines=doc.splitTextToSize(cell,colW[ci]-2);
+      maxLines=Math.max(maxLines,lines.length);
+    });
+    if(ty+maxLines*lineH>ph-mg){ doc.addPage(); ty=18; }
+    tx=mg;
+    row.forEach((cell,ci)=>{
+      const lines=doc.splitTextToSize(cell,colW[ci]-2);
+      lines.forEach((ln,li)=>doc.text(ln,tx+1,ty+li*lineH));
+      tx+=colW[ci];
+    });
+    doc.setDrawColor(220); doc.line(mg,ty+maxLines*lineH+1,pw-mg,ty+maxLines*lineH+1);
+    ty+=maxLines*lineH+3;
+  });
 
-    <div class="cta" id="ctaBar"></div>
-  </div>
+  // ---- Page 3: Map with numbered pins ----
+  doc.addPage();
+  doc.setFont('helvetica','bold'); doc.setFontSize(12);
+  const courtName=state.courtyard==='suedhof'?'Südhof':'Nordhof';
+  doc.text('Kartierung – '+courtName,mg,18);
+  doc.line(mg,21,pw-mg,21);
 
-  <script>
-    const state = {
-      screen: 'home',
-      courtyard: 'suedhof',
-      marker: { x: 64, y: 57 },
-      observations: [
-        { species: 'H – Haussperling', count: 10, sex: 'nicht erkannt', location: 'Gebüsch am Durchgang Ossietzkystr. 26', behaviors: ['Reviergesang'], note: 'Chorgesang im Gebüsch am Durchgang.', x: 24, y: 42 },
-        { species: 'Rt – Ringeltaube', count: 3, sex: 'nicht erkannt', location: 'Konzertwiese', behaviors: ['Nahrungssuche'], note: 'Kommen auf die Wiese geflogen, Nahrungssuche auf dem Boden.', x: 60, y: 56 },
-        { species: 'KL – Kleiber', count: 1, sex: 'Männchen', location: 'Baumstamm nahe Haus 1', behaviors: ['Nahrungssuche'], note: 'Klettert am Stamm hoch.', x: 52, y: 34 },
-        { species: 'S – Star', count: 3, sex: 'nicht erkannt', location: 'Kavalierstraße 25, Dach', behaviors: ['Flugbewegung'], note: 'Fliegen vom Dach los Richtung Gartenbereich.', x: 35, y: 22 },
-        { species: 'R – Rotkehlchen', count: 1, sex: 'nicht erkannt', location: 'Hecke südlicher Weg', behaviors: ['Reviergesang'], note: 'Singt aus der Hecke.', x: 72, y: 67 },
-        { species: 'E – Elster', count: 2, sex: 'gemischtes Paar', location: 'Baum an Randzone', behaviors: ['Balz'], note: 'Paarbildung und Kommunikation im Bruthabitat erkennbar.', x: 80, y: 28 },
-      ]
+  // Load map image and draw it
+  const imgSrc=MAP_IMAGES[state.courtyard];
+  try{
+    const mapDataUrl=await loadImageAsDataURL(imgSrc);
+    // Portrait map: fit within page leaving margins
+    const mapX=mg, mapY=25;
+    const mapW=pw-2*mg;   // ~182mm
+    const mapH=mapW*(4/3); // preserve 3:4 ratio
+    const fitH=Math.min(mapH, ph-mapY-mg);
+    const fitW=fitH*(3/4);
+    doc.addImage(mapDataUrl,'JPEG',mapX,mapY,fitW,fitH);
+
+    // Draw green numbered circles over saved observations
+    state.observations.forEach((obs,i)=>{
+      if(obs.x==null||obs.y==null) return;
+      const px=mapX + (obs.x/100)*fitW;
+      const py=mapY + (obs.y/100)*fitH;
+      const r=4;
+      doc.setFillColor(26,125,56);  // #1a7d38
+      doc.circle(px,py,r,'F');
+      doc.setTextColor(255,255,255);
+      doc.setFont('helvetica','bold'); doc.setFontSize(7);
+      const label=String(i+1);
+      const tw=doc.getTextWidth(label);
+      doc.text(label, px-tw/2, py+2.5);
+      doc.setTextColor(0,0,0);
+    });
+  } catch(err){
+    doc.setFont('helvetica','normal'); doc.setFontSize(10);
+    doc.text('(Kartenbild nicht verfügbar – Pins werden als Koordinatenliste angegeben)',mg,30);
+    state.observations.forEach((obs,i)=>{
+      if(obs.x!=null) doc.text(`${i+1}. ${obs.species} – x:${obs.x.toFixed(1)}% y:${obs.y.toFixed(1)}%`,mg,42+i*8);
+    });
+  }
+
+  // Save
+  const dateVal=document.getElementById('date').value||'2026-05-12';
+  doc.save(`vogeldokumentation-${dateVal}-${state.courtyard}.pdf`);
+}
+
+function loadImageAsDataURL(src){
+  return new Promise((resolve,reject)=>{
+    const img=new Image();
+    img.crossOrigin='anonymous';
+    img.onload=()=>{
+      const c=document.createElement('canvas');
+      c.width=img.naturalWidth; c.height=img.naturalHeight;
+      c.getContext('2d').drawImage(img,0,0);
+      resolve(c.toDataURL('image/jpeg',0.85));
     };
+    img.onerror=reject;
+    img.src=src;
+  });
+}
 
-    const screens = [...document.querySelectorAll('.screen')];
-    const topTitle = document.getElementById('topTitle');
-    const backBtn = document.getElementById('backBtn');
-    const ctaBar = document.getElementById('ctaBar');
+// ── Screen management ─────────────────────────────────────────────
+function showScreen(name){
+  state.screen=name;
+  screens.forEach(s=>s.classList.toggle('active',s.dataset.screen===name));
+  topTitle.textContent=titles[name]||'Vogelbeobachtung';
+  backBtn.classList.toggle('hidden',name==='home');
+  ctaBar.innerHTML=ctas[name]||'';
+  ctaBar.classList.toggle('active',Boolean(ctas[name]));
+  updateSummaryFields();
+  wireButtons();
 
-    const titles = {
-      home: 'Vogelbeobachtung',
-      'new-survey': 'Neue Erfassung',
-      'survey-overview': 'Erfassung',
-      'observation-form': 'Beobachtung',
-      'map-screen': 'Karte',
-      'review-save': 'Prüfen',
-      'export-preview': 'PDF-Vorschau',
-      'export-done': 'Export'
-    };
-
-    const backMap = {
-      'new-survey': 'home',
-      'survey-overview': 'home',
-      'observation-form': 'survey-overview',
-      'map-screen': 'observation-form',
-      'review-save': 'map-screen',
-      'export-preview': 'survey-overview',
-      'export-done': 'export-preview'
-    };
-
-    const ctas = {
-      home: '',
-      'new-survey': `<button class="secondary nav" data-target="home">Abbrechen</button><button class="primary nav" data-target="survey-overview">Erfassung starten</button>`,
-      'survey-overview': `<button class="secondary nav" data-target="export-preview">PDF exportieren</button><button class="primary nav" data-target="observation-form">Beobachtung hinzufügen</button>`,
-      'observation-form': `<button class="secondary nav" data-target="survey-overview">Zurück</button><button class="primary nav" data-target="map-screen">Weiter zur Karte</button>`,
-      'map-screen': `<button class="secondary nav" data-target="observation-form">Zurück</button><button class="primary nav" data-target="review-save">Ort übernehmen</button>`,
-      'review-save': `<button class="secondary nav" data-target="map-screen">Ort bearbeiten</button><button class="primary" id="saveObservation">Jetzt speichern</button>`,
-      'export-preview': `<button class="secondary nav" data-target="survey-overview">Zurück</button><button class="primary nav" data-target="export-done">PDF erzeugen</button>`,
-      'export-done': `<button class="secondary nav" data-target="home">Zur Übersicht</button><button class="primary nav" data-target="new-survey">Neue Erfassung</button>`
-    };
-
-    function formatDate(isoDate) {
-      if (!isoDate) return '';
-      const [y, m, d] = isoDate.split('-');
-      return `${d}.${m}.${y}`;
-    }
-
-    function renderMap(container, interactive = false) {
-      const points = interactive ? [state.marker] : state.observations.map(o => ({ x: o.x, y: o.y }));
-      const isNord = state.courtyard === 'nordhof';
-      container.innerHTML = `
-        <svg viewBox="0 0 400 500" aria-hidden="true">
-          <rect x="0" y="0" width="400" height="500" fill="#efe9dd"></rect>
-          <rect x="22" y="26" width="356" height="448" rx="18" fill="#f7f3ec" stroke="#cfc7bb"></rect>
-          <text x="32" y="52" font-size="13" font-weight="bold" fill="#5f5a52">${isNord ? 'Nordhof' : 'Südhof'}</text>
-          <path d="M40 82 H360" stroke="#b1a794" stroke-width="8" stroke-linecap="round"></path>
-          <text x="44" y="74" font-size="11" fill="#5f5a52">Kavalierstraße</text>
-          <path d="M58 120 V438" stroke="#c8bea8" stroke-width="6" stroke-linecap="round"></path>
-          <text x="20" y="290" font-size="11" fill="#5f5a52" transform="rotate(-90 20,290)">Ossietzkystraße</text>
-          ${isNord
-            ? `<path d="M260 100 V450" stroke="#c8bea8" stroke-width="6" stroke-linecap="round"></path>
-               <text x="265" y="120" font-size="11" fill="#5f5a52">Am Schloßpark</text>
-               <text x="78" y="96" font-size="10" fill="#5f5a52">19b</text>
-               <text x="110" y="96" font-size="10" fill="#5f5a52">19c</text>
-               <text x="142" y="96" font-size="10" fill="#5f5a52">19d</text>
-               <text x="74" y="140" font-size="10" fill="#5f5a52">24</text>
-               <text x="74" y="175" font-size="10" fill="#5f5a52">26</text>
-               <text x="284" y="96" font-size="10" fill="#5f5a52">25</text>`
-            : `<path d="M78 432 H330" stroke="#c8bea8" stroke-width="6" stroke-linecap="round"></path>
-               <text x="160" y="450" font-size="11" fill="#5f5a52">Wolfshagener Straße</text>
-               <text x="248" y="97" font-size="10" fill="#5f5a52">19e</text>
-               <text x="74" y="134" font-size="10" fill="#5f5a52">20</text>
-               <text x="74" y="168" font-size="10" fill="#5f5a52">18</text>
-               <text x="74" y="202" font-size="10" fill="#5f5a52">16</text>
-               <text x="74" y="236" font-size="10" fill="#5f5a52">14</text>
-               <text x="74" y="270" font-size="10" fill="#5f5a52">12</text>
-               <text x="290" y="450" font-size="10" fill="#5f5a52">71</text>
-               <text x="318" y="450" font-size="10" fill="#5f5a52">69</text>`
-          }
-          <rect x="120" y="160" width="116" height="86" rx="8" fill="#ddd3c2" stroke="#b8ad99"></rect>
-          <text x="158" y="208" font-size="13" fill="#544f47">Haus 1</text>
-          <circle cx="274" cy="154" r="18" fill="#d8e2d3" stroke="#aab89f"></circle>
-          <circle cx="302" cy="226" r="15" fill="#d8e2d3" stroke="#aab89f"></circle>
-          <circle cx="98" cy="306" r="17" fill="#d8e2d3" stroke="#aab89f"></circle>
-          <circle cx="266" cy="336" r="22" fill="#d8e2d3" stroke="#aab89f"></circle>
-          ${!isNord ? `<rect x="208" y="302" width="108" height="54" rx="14" fill="#dfe7ca" stroke="#bcc69e"></rect>
-          <text x="222" y="334" font-size="11" fill="#5f5a52">Konzertwiese</text>` : ''}
-        </svg>
-      `;
-      points.forEach(p => {
-        const el = document.createElement('div');
-        el.className = 'marker';
-        el.style.left = p.x + '%';
-        el.style.top = p.y + '%';
-        container.appendChild(el);
-      });
-      if (interactive) {
-        container.onclick = (e) => {
-          const r = container.getBoundingClientRect();
-          state.marker = {
-            x: Math.max(6, Math.min(94, ((e.clientX - r.left) / r.width) * 100)),
-            y: Math.max(6, Math.min(94, ((e.clientY - r.top) / r.height) * 100))
-          };
-          renderMap(container, true);
-        };
-      }
-    }
-
-    function updateSummaryFields() {
-      const dateVal = document.getElementById('date').value;
-      const timeVal = document.getElementById('time').value;
-      const tempVal = document.getElementById('temp').value;
-      const windVal = document.getElementById('wind').value;
-      const weatherVal = document.getElementById('weather').value;
-      const observerVal = document.getElementById('observer').value;
-      const formatted = formatDate(dateVal);
-
-      const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-      set('dateDisplay', formatted);
-      set('overviewDate', formatted);
-      set('summaryDate', formatted);
-      set('pdfDate', formatted);
-      set('overviewTime', timeVal);
-      set('summaryTime', timeVal);
-      set('pdfTime', timeVal);
-      set('tempDisplay', tempVal + '°C');
-      set('pdfTemp', tempVal + '°C');
-      set('summaryWind', windVal);
-      set('pdfWind', windVal);
-      set('summaryWeather', weatherVal);
-      set('pdfWeather', weatherVal);
-      set('summaryObserver', observerVal);
-      set('pdfObserver', observerVal);
-      const court = state.courtyard === 'suedhof' ? 'Südhof' : 'Nordhof';
-      set('courtLabel', court);
-      set('courtLabelMini', court);
-      set('pdfCourt', court);
-      const exportName = `vogeldokumentation-${dateVal || '2026-05-07'}-${state.courtyard}.pdf`;
-      set('exportFilename', exportName);
-    }
-
-    function renderObservations() {
-      const list = document.getElementById('observationList');
-      const rows = document.getElementById('previewRows');
-      document.getElementById('obsCount').textContent = String(state.observations.length);
-      list.innerHTML = state.observations.map((obs, i) => `
-        <div class="obs-card">
-          <div class="obs-top">
-            <div>
-              <p class="obs-title">${i + 1}. ${obs.species}</p>
-              <p class="obs-meta">${obs.count} Individuen · ${obs.sex} · ${obs.location}</p>
-            </div>
-            <span class="badge">${obs.behaviors[0] || 'Beobachtung'}</span>
-          </div>
-          <div class="muted">${obs.note}</div>
-        </div>
-      `).join('');
-      if (rows) {
-        rows.innerHTML = state.observations.map((obs, i) => `
-          <tr>
-            <td>${i + 1}</td>
-            <td>${obs.species}</td>
-            <td>${obs.count} · ${obs.sex}</td>
-            <td>${obs.location}</td>
-            <td>${obs.note}</td>
-          </tr>
-        `).join('');
-      }
-    }
-
-    function renderReview() {
-      const speciesText = document.getElementById('species').selectedOptions[0].textContent;
-      const count = document.getElementById('count').value || '1';
-      const sex = document.getElementById('sex').value;
-      const behaviors = [...document.querySelectorAll('#behaviors .chip.active')].map(el => el.textContent.trim());
-      const obsText = document.getElementById('obsText').value;
-      const location = document.getElementById('mapLocationText')?.value || document.getElementById('locationText')?.value || '—';
-      const panel = document.getElementById('reviewPanel');
-      if (panel) {
-        panel.innerHTML = `
-          <div class="list-item"><span>Art</span><strong>${speciesText}</strong></div>
-          <div class="list-item"><span>Anzahl</span><strong>${count}</strong></div>
-          <div class="list-item"><span>Geschlecht</span><strong>${sex}</strong></div>
-          <div class="list-item"><span>Verhalten</span><strong>${behaviors.join(', ') || '—'}</strong></div>
-          <div class="list-item"><span>Ort</span><strong>${location || '—'}</strong></div>
-          <div class="panel" style="background: var(--color-surface-2); margin-top: .5rem;">${obsText || '—'}</div>
-        `;
-      }
-      const summary = document.getElementById('currentObsSummary');
-      if (summary) {
-        summary.textContent = `${speciesText} · ${count} Individuen · ${behaviors.join(', ') || '—'}`;
-      }
-    }
-
-    function showScreen(name) {
-      state.screen = name;
-      screens.forEach(s => s.classList.toggle('active', s.dataset.screen === name));
-      topTitle.textContent = titles[name] || 'Vogelbeobachtung';
-      backBtn.classList.toggle('hidden', name === 'home');
-      ctaBar.innerHTML = ctas[name] || '';
-      ctaBar.classList.toggle('active', Boolean(ctas[name]));
-      updateSummaryFields();
-      wireNavButtons();
-      if (name === 'survey-overview') {
-        renderObservations();
-        renderMap(document.getElementById('overviewMap'));
-      }
-      if (name === 'map-screen') {
-        document.getElementById('mapTitle').textContent = state.courtyard === 'suedhof' ? 'Südhof-Karte' : 'Nordhof-Karte';
-        renderMap(document.getElementById('interactiveMap'), true);
-        renderReview();
-      }
-      if (name === 'review-save') renderReview();
-      if (name === 'export-preview') renderObservations();
-    }
-
-    function wireNavButtons() {
-      document.querySelectorAll('.nav').forEach(btn => {
-        btn.onclick = () => showScreen(btn.dataset.target);
-      });
-      const saveBtn = document.getElementById('saveObservation');
-      if (saveBtn) {
-        saveBtn.onclick = () => {
-          const speciesText = document.getElementById('species').selectedOptions[0].textContent;
-          state.observations.unshift({
-            species: speciesText,
-            count: Number(document.getElementById('count').value || 1),
-            sex: document.getElementById('sex').value,
-            location: document.getElementById('mapLocationText')?.value || document.getElementById('locationText')?.value || 'Kartierter Punkt',
-            behaviors: [...document.querySelectorAll('#behaviors .chip.active')].map(el => el.textContent.trim()),
-            note: document.getElementById('obsText').value,
-            x: state.marker.x,
-            y: state.marker.y
-          });
-          renderObservations();
-          showScreen('survey-overview');
-        };
-      }
-    }
-
-    document.getElementById('themeToggle').addEventListener('click', () => {
-      const html = document.documentElement;
-      html.setAttribute('data-theme', html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
-    });
-
-    document.getElementById('courtyardSelect').addEventListener('click', (e) => {
-      const btn = e.target.closest('button[data-court]');
-      if (!btn) return;
-      state.courtyard = btn.dataset.court;
-      [...document.querySelectorAll('#courtyardSelect button')].forEach(b => b.classList.toggle('active', b === btn));
-      updateSummaryFields();
-    });
-
-    document.getElementById('behaviors').addEventListener('click', (e) => {
-      const chip = e.target.closest('.chip');
-      if (!chip) return;
-      chip.classList.toggle('active');
-      renderReview();
-    });
-
-    ['date','time','temp','wind','weather','observer'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.addEventListener('change', updateSummaryFields);
-    });
-
-    ['species','count','sex','obsText','locationText'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) {
-        el.addEventListener('input', renderReview);
-        el.addEventListener('change', renderReview);
-      }
-    });
-
-    backBtn.addEventListener('click', () => {
-      showScreen(backMap[state.screen] || 'home');
-    });
-
-    updateSummaryFields();
+  if(name==='survey-overview'){
     renderObservations();
-    showScreen('home');
-  </script>
+    renderOverviewMap(document.getElementById('overviewMap'));
+  }
+  if(name==='map-screen'){
+    document.getElementById('mapTitle').textContent=state.courtyard==='suedhof'?'Südhof-Karte':'Nordhof-Karte';
+    renderInteractiveMap(document.getElementById('interactiveMap'));
+    renderReview();
+  }
+  if(name==='review-save') renderReview();
+  if(name==='export-preview') renderObservations();
+}
+
+function wireButtons(){
+  document.querySelectorAll('.nav').forEach(btn=>{
+    btn.onclick=()=>showScreen(btn.dataset.target);
+  });
+
+  // Confirm location (map screen)
+  const confirmBtn=document.getElementById('confirmLocation');
+  if(confirmBtn) confirmBtn.onclick=()=>showScreen('review-save');
+
+  // Save observation
+  const saveBtn=document.getElementById('saveObservation');
+  if(saveBtn) saveBtn.onclick=()=>{
+    const speciesText=document.getElementById('species').selectedOptions[0].textContent;
+    state.observations.push({
+      species:speciesText,
+      count:Number(document.getElementById('count').value||1),
+      sex:document.getElementById('sex').value,
+      location:document.getElementById('mapLocationText')?.value||document.getElementById('locationText')?.value||'Kartierter Punkt',
+      behaviors:[...document.querySelectorAll('#behaviors .chip.active')].map(el=>el.textContent.trim()),
+      note:document.getElementById('obsText').value,
+      x:state.pendingMarker?.x??null,
+      y:state.pendingMarker?.y??null
+    });
+    // Reset form fields for next observation
+    state.pendingMarker=null;
+    document.getElementById('obsText').value='';
+    document.getElementById('locationText').value='';
+    document.getElementById('mapLocationText').value='';
+    document.getElementById('movementText').value='';
+    document.getElementById('count').value='1';
+    document.querySelectorAll('#behaviors .chip').forEach(c=>c.classList.remove('active'));
+    document.querySelector('#behaviors .chip')?.classList.add('active');
+    renderObservations();
+    showScreen('survey-overview');
+  };
+
+  // Generate PDF
+  const pdfBtn=document.getElementById('generatePdf');
+  if(pdfBtn) pdfBtn.onclick=async()=>{
+    pdfBtn.disabled=true;
+    pdfBtn.textContent='Erstelle PDF…';
+    try{ await generatePDF(); showScreen('export-done'); }
+    catch(e){ alert('PDF-Fehler: '+e.message); }
+    finally{ pdfBtn.disabled=false; pdfBtn.textContent='PDF erzeugen'; }
+  };
+}
+
+// ── Event listeners ───────────────────────────────────────────────
+document.getElementById('themeToggle').addEventListener('click',()=>{
+  const html=document.documentElement;
+  html.setAttribute('data-theme',html.getAttribute('data-theme')==='dark'?'light':'dark');
+});
+
+document.getElementById('courtyardSelect').addEventListener('click',(e)=>{
+  const btn=e.target.closest('button[data-court]');
+  if(!btn) return;
+  state.courtyard=btn.dataset.court;
+  [...document.querySelectorAll('#courtyardSelect button')].forEach(b=>b.classList.toggle('active',b===btn));
+  updateSummaryFields();
+});
+
+document.getElementById('behaviors').addEventListener('click',(e)=>{
+  const chip=e.target.closest('.chip');
+  if(!chip) return;
+  chip.classList.toggle('active');
+  renderReview();
+});
+
+['date','time','temp','wind','weather','observer'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el) el.addEventListener('change',updateSummaryFields);
+});
+
+['species','count','sex','obsText','locationText'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el){ el.addEventListener('input',renderReview); el.addEventListener('change',renderReview); }
+});
+
+backBtn.addEventListener('click',()=>showScreen(backMap[state.screen]||'home'));
+
+// ── Init ──────────────────────────────────────────────────────────
+updateSummaryFields();
+renderObservations();
+showScreen('home');
+</script>
 </body>
 </html>
