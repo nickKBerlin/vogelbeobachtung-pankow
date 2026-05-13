@@ -526,7 +526,7 @@ const state = {
   screen: 'home',
   courtyard: 'suedhof',
   pendingMarker: null,
-  editingIndex: null,   // null = neue Obs; number = Index der zu bearbeitenden Obs
+  editingIndex: null,
   observations: []
 };
 
@@ -626,7 +626,6 @@ function renderInteractiveMap(container){
   img.src=MAP_IMAGES[state.courtyard];
   img.alt=state.courtyard==='suedhof'?'S\u00fcdhof-Karte':'Nordhof-Karte';
   container.appendChild(img);
-  // when editing, don't show the obs being edited as a fixed pin (it moves to pending)
   state.observations.forEach((obs,i)=>{
     if(i === state.editingIndex) return;
     if(obs.x!=null && obs.y!=null) container.appendChild(buildPin(i+1, obs.x, obs.y));
@@ -671,15 +670,12 @@ function updateSummaryFields(){
   set('exportFilename',`vogeldokumentation-${isoDate}-${state.courtyard}.pdf`);
 }
 
-// Load an existing observation into Screen 4 fields for editing
 function loadObsIntoForm(idx) {
   const obs = state.observations[idx];
   state.editingIndex = idx;
-  // pendingMarker picks up the existing pin so user can move it
   state.pendingMarker = (obs.x != null && obs.y != null) ? { x: obs.x, y: obs.y } : null;
 
   const sel = document.getElementById('species');
-  // Try to match a known option by text; fall back to custom
   const matchedOpt = [...sel.options].find(o => o.textContent === obs.species && o.value !== 'custom');
   if (matchedOpt) {
     sel.value = matchedOpt.value;
@@ -701,7 +697,6 @@ function loadObsIntoForm(idx) {
 
   document.getElementById('locationText').value = obs.location || '';
   document.getElementById('obsText').value = obs.note || '';
-  // also sync mapLocationText for Screen 5
   const mapLoc = document.getElementById('mapLocationText');
   if (mapLoc) mapLoc.value = obs.location || '';
 }
@@ -723,7 +718,6 @@ function renderObservations(){
       <button class="obs-edit-btn" data-edit-idx="${i}">&#9998; Bearbeiten</button>
     </div>`).join('');
 
-  // wire edit buttons
   list?.querySelectorAll('[data-edit-idx]').forEach(btn => {
     btn.onclick = () => {
       const idx = parseInt(btn.dataset.editIdx, 10);
@@ -765,6 +759,8 @@ async function generatePDF(){
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
   const pw=210, ph=297, mg=14;
+
+  // ── Seite 1: Kopfdaten ──────────────────────────────────────────────────
   doc.setFont('helvetica','bold'); doc.setFontSize(14);
   doc.text('Vogeldokumentation \u201eGr\u00fcner Kiez Pankow\u201c 2026', mg, 20);
   doc.setDrawColor(180); doc.line(mg,23,pw-mg,23);
@@ -786,30 +782,37 @@ async function generatePDF(){
     doc.setFont('helvetica','normal'); doc.text(val,70,y); y+=7;
   });
 
-  doc.addPage();
+  // ── Beobachtungen: direkt nach Metadaten auf gleicher Seite ────────────
+  // y ist jetzt ~93mm; Tabellen-Header braucht ~18mm Anlauf → passt locker
+  y += 8; // Abstand nach Metadaten
+
   doc.setFont('helvetica','bold'); doc.setFontSize(12);
-  doc.text('Beobachtungen',mg,18); doc.line(mg,21,pw-mg,21);
+  doc.text('Beobachtungen', mg, y); y += 4;
+  doc.setDrawColor(180); doc.line(mg, y, pw-mg, y); y += 5;
+
   const colW=[8,42,32,46,pw-2*mg-128];
   const headers=['#','Art','Anzahl\u00b7Geschlecht','Wo beobachtet?','Was beobachtet/geh\u00f6rt?'];
-  let tx=mg, ty=28;
+  let tx=mg;
   doc.setFontSize(8); doc.setFont('helvetica','bold');
-  headers.forEach((h,i)=>{ doc.text(h,tx+1,ty); tx+=colW[i]; });
-  doc.line(mg,ty+2,pw-mg,ty+2); ty+=6;
+  headers.forEach((h,i)=>{ doc.text(h,tx+1,y); tx+=colW[i]; });
+  y += 2; doc.line(mg,y,pw-mg,y); y += 4;
+
   doc.setFont('helvetica','normal');
   state.observations.forEach((obs,i)=>{
     const row=[String(i+1),obs.species,obs.count+'\u00b7'+obs.sex,obs.location||'\u2014',obs.note||''];
     tx=mg; const lineH=5; let maxLines=1;
     row.forEach((cell,ci)=>{ const l=doc.splitTextToSize(cell,colW[ci]-2); maxLines=Math.max(maxLines,l.length); });
-    if(ty+maxLines*lineH>ph-mg){ doc.addPage(); ty=18; }
+    if(y+maxLines*lineH > ph-mg){ doc.addPage(); y=18; }
     tx=mg;
     row.forEach((cell,ci)=>{
-      doc.splitTextToSize(cell,colW[ci]-2).forEach((ln,li)=>doc.text(ln,tx+1,ty+li*lineH));
+      doc.splitTextToSize(cell,colW[ci]-2).forEach((ln,li)=>doc.text(ln,tx+1,y+li*lineH));
       tx+=colW[ci];
     });
-    doc.setDrawColor(220); doc.line(mg,ty+maxLines*lineH+1,pw-mg,ty+maxLines*lineH+1);
-    ty+=maxLines*lineH+3;
+    doc.setDrawColor(220); doc.line(mg,y+maxLines*lineH+1,pw-mg,y+maxLines*lineH+1);
+    y+=maxLines*lineH+3;
   });
 
+  // ── Kartenanhang: immer neue Seite ─────────────────────────────────────
   doc.addPage();
   doc.setFont('helvetica','bold'); doc.setFontSize(12);
   const courtName=state.courtyard==='suedhof'?'S\u00fcdhof':'Nordhof';
@@ -868,10 +871,8 @@ function updateObsFormMode() {
   const isEdit = state.editingIndex !== null;
   const title    = document.getElementById('obsFormTitle');
   const subtitle = document.getElementById('obsFormSubtitle');
-  const nextBtn  = document.getElementById('obsFormNextBtn');
   if (title)    title.textContent    = isEdit ? `Beobachtung ${state.editingIndex+1} bearbeiten` : 'Beobachtung hinzuf\u00fcgen';
   if (subtitle) subtitle.textContent = isEdit ? 'Felder anpassen, dann Karte aktualisieren oder direkt speichern.' : 'Art, Anzahl, Geschlecht, Verhalten und Beschreibung eingeben.';
-  if (nextBtn)  nextBtn.textContent  = isEdit ? 'Weiter zur Karte' : 'Weiter zur Karte';
 }
 
 function showScreen(name){
@@ -884,7 +885,6 @@ function showScreen(name){
   updateSummaryFields();
   wireButtons();
   if(name==='survey-overview'){
-    // clear edit state when returning to overview
     if(state.editingIndex === null) resetObservationForm();
     renderObservations();
     renderOverviewMap(document.getElementById('overviewMap'));
@@ -907,7 +907,6 @@ function showScreen(name){
 function wireButtons(){
   document.querySelectorAll('.nav').forEach(btn=>{
     btn.onclick=()=>{
-      // navigating away from observation-form via .nav "Zurück" resets edit state
       if(state.screen==='observation-form' && btn.dataset.target==='survey-overview'){
         resetObservationForm();
       }
@@ -940,9 +939,9 @@ function wireButtons(){
       y: state.pendingMarker?.y??null
     };
     if (state.editingIndex !== null) {
-      state.observations[state.editingIndex] = updated;  // overwrite
+      state.observations[state.editingIndex] = updated;
     } else {
-      state.observations.push(updated);                  // new entry
+      state.observations.push(updated);
     }
     resetObservationForm();
     renderObservations();
