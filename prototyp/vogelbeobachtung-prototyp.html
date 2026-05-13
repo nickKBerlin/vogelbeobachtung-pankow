@@ -21,7 +21,8 @@
       --color-surface-offset:#f3f0ec;--color-border:#d4d1ca;--color-divider:#dcd9d5;
       --color-text:#28251d;--color-text-muted:#6e6d67;--color-text-faint:#9d9b94;
       --color-primary:#01696f;--color-primary-hover:#0c4e54;--color-primary-highlight:#cedcd8;
-      --color-warning:#964219;--color-error:#c0392b;--color-error-bg:#fdf0ee;
+      --color-warning:#964219;--color-warning-bg:#fdf4ed;--color-warning-border:#e8c49a;
+      --color-error:#c0392b;--color-error-bg:#fdf0ee;
       --color-error-border:#e8b4ae;
       --radius-sm:.5rem;--radius-md:.75rem;--radius-lg:1rem;--radius-xl:1.25rem;--radius-full:9999px;
       --shadow-sm:0 1px 2px rgba(0,0,0,.06);--shadow-md:0 10px 30px rgba(0,0,0,.08);
@@ -33,7 +34,8 @@
       --color-surface-offset:#242320;--color-border:#393836;--color-divider:#2b2926;
       --color-text:#e0dfdc;--color-text-muted:#a4a29c;--color-text-faint:#7d7a74;
       --color-primary:#4f98a3;--color-primary-hover:#227f8b;--color-primary-highlight:#313b3b;
-      --color-warning:#c57a54;--color-error:#e57060;--color-error-bg:#2a1a18;
+      --color-warning:#c57a54;--color-warning-bg:#2a1e14;--color-warning-border:#6b3d1e;
+      --color-error:#e57060;--color-error-bg:#2a1a18;
       --color-error-border:#5a2a24;
       --shadow-sm:0 1px 2px rgba(0,0,0,.25);--shadow-md:0 10px 30px rgba(0,0,0,.35);
     }
@@ -101,12 +103,55 @@
     .list-item:last-child{border-bottom:0}
     .preview-sheet{background:white;color:#222;border-radius:var(--radius-lg);padding:var(--space-4);box-shadow:var(--shadow-md);display:grid;gap:var(--space-3)}
     .preview-sheet h3{margin:0;font-size:1.1rem}
-    .preview-table{width:100%;border-collapse:collapse;font-size:.87rem}
+    .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:var(--radius-sm)}
+    .preview-table{width:100%;min-width:480px;border-collapse:collapse;font-size:.87rem}
     .preview-table th,.preview-table td{border:1px solid #ddd;padding:.5rem;vertical-align:top;text-align:left}
     .hint{font-size:var(--text-xs);color:var(--color-text-muted)}
     .success{background:color-mix(in srgb,var(--color-primary) 10%,var(--color-surface));border:1px solid color-mix(in srgb,var(--color-primary) 25%,var(--color-border))}
     .hidden{display:none!important}
     select option:disabled{color:var(--color-text-faint)}
+    /* Screen 7: Endzeit callout */
+    .endtime-callout{
+      background:var(--color-warning-bg);
+      border:2px solid var(--color-warning-border);
+      border-radius:var(--radius-xl);
+      padding:var(--space-4);
+      display:grid;
+      gap:var(--space-3);
+      box-shadow:var(--shadow-sm);
+    }
+    .endtime-callout .callout-header{
+      display:flex;
+      align-items:center;
+      gap:var(--space-2);
+    }
+    .endtime-callout .callout-icon{
+      font-size:1.4rem;
+      line-height:1;
+    }
+    .endtime-callout .callout-title{
+      font-size:var(--text-base);
+      font-weight:700;
+      color:var(--color-warning);
+      margin:0;
+    }
+    .endtime-callout .callout-hint{
+      font-size:var(--text-sm);
+      color:var(--color-text-muted);
+      margin:0;
+    }
+    .endtime-callout .input{
+      border-color:var(--color-warning-border);
+      background:var(--color-surface-2);
+      font-size:var(--text-lg);
+      font-weight:700;
+      letter-spacing:.05em;
+    }
+    .endtime-callout .input:focus{
+      outline:2px solid var(--color-warning);
+      outline-offset:2px;
+      border-color:var(--color-warning);
+    }
     @media(min-width:900px){
       body{padding:var(--space-8)}
       .app{border-radius:28px;box-shadow:var(--shadow-md);overflow:hidden;min-height:calc(100vh - 4rem)}
@@ -368,15 +413,23 @@
       <div>
         <span class="eyebrow">Screen 7</span>
         <h2 style="font-size:var(--text-xl);margin:.75rem 0 .35rem">PDF-Export vorbereiten</h2>
-        <p class="muted">Endzeit eingeben, dann Kopfdaten und Tabelle pr&uuml;fen.</p>
+        <p class="muted">Bitte zuerst Endzeit eintragen, dann Daten pr&uuml;fen.</p>
       </div>
-      <div class="panel stack">
+
+      <!-- Endzeit: hervorgehobene Callout-Card -->
+      <div class="endtime-callout">
+        <div class="callout-header">
+          <span class="callout-icon">&#9200;</span>
+          <p class="callout-title">Endzeit der Erfassung eintragen</p>
+        </div>
+        <p class="callout-hint">Falls du die App erst zu Hause &ouml;ffnest: Trage hier die genaue Uhrzeit ein, wann ihr die Beobachtung beendet habt &mdash; nicht die aktuelle Zeit.</p>
         <div class="field">
-          <label for="endTime">Endzeit der Erfassung</label>
           <input id="endTime" class="input" type="text" placeholder="HH:MM" maxlength="5" inputmode="numeric" autocomplete="off">
           <div class="hint">24-Stunden-Format, z.&thinsp;B. 16:45</div>
         </div>
       </div>
+
+      <!-- Vorschau-Sheet -->
       <div class="preview-sheet">
         <h3>Vogeldokumentation &bdquo;Gr&uuml;ner Kiez Pankow&ldquo; 2026</h3>
         <div class="list-plain">
@@ -389,12 +442,14 @@
           <div class="list-item"><span>Sonne / Niederschlag</span><strong id="pdfWeather"></strong></div>
           <div class="list-item"><span>Erfassung durch</span><strong id="pdfObserver"></strong></div>
         </div>
-        <table class="preview-table">
-          <thead>
-            <tr><th>#</th><th>Art</th><th>Anzahl&middot;Geschlecht</th><th>Wo beobachtet?</th><th>Was beobachtet/geh&ouml;rt?</th></tr>
-          </thead>
-          <tbody id="previewRows"></tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="preview-table">
+            <thead>
+              <tr><th>#</th><th>Art</th><th>Anzahl&middot;Geschlecht</th><th>Wo beobachtet?</th><th>Was beobachtet/geh&ouml;rt?</th></tr>
+            </thead>
+            <tbody id="previewRows"></tbody>
+          </table>
+        </div>
         <div class="hint">+ Kartenanhang mit gr&uuml;nen Nummern wird als letzte Seite angeh&auml;ngt.</div>
       </div>
     </div>
@@ -461,30 +516,20 @@ function setupTimeInput(el) {
   });
 }
 
-// --- Geschlecht-Optionen je nach Anzahl ---
-// Anzahl 1-3 (oder ungerade <4): Paar + Gruppe disabled
-// Anzahl 2 (gerade, <4):         Paar enabled, Gruppe disabled
-// Anzahl >=4 (gerade):           Paar + Gruppe enabled
-// Anzahl >=4 (ungerade):         Paar disabled, Gruppe enabled
 function updateSexOptions() {
   const count = parseInt(document.getElementById('count').value, 10);
   const sex   = document.getElementById('sex');
   const optPair  = document.getElementById('optPair');
   const optGroup = document.getElementById('optGroup');
-
   const isValid   = Number.isInteger(count) && count >= 1;
   const pairOk    = isValid && count >= 2 && count % 2 === 0;
   const groupOk   = isValid && count >= 4;
-
   optPair.disabled  = !pairOk;
   optGroup.disabled = !groupOk;
-
-  // Reset forbidden selections
   if (!pairOk  && sex.value === 'gemischtes Paar')   sex.value = 'nicht erkannt';
   if (!groupOk && sex.value === 'gemischte Gruppe')  sex.value = 'nicht erkannt';
 }
 
-// --- Species custom input toggle ---
 function updateSpeciesCustom() {
   const sel = document.getElementById('species');
   const inp = document.getElementById('speciesCustom');
@@ -532,7 +577,6 @@ const backMap = {
 const ctas = {
   home:'',
   'new-survey':`<button class="secondary nav" data-target="home">Abbrechen</button><button class="primary" id="startSurveyBtn">Erfassung starten</button>`,
-  // PRIMARY first (Beobachtung), SECONDARY second (PDF)
   'survey-overview':`<button class="secondary nav" data-target="export-preview">PDF exportieren</button><button class="primary nav" data-target="observation-form">Beobachtung hinzuf\u00fcgen</button>`,
   'observation-form':`<button class="secondary nav" data-target="survey-overview">Zur\u00fcck</button><button class="primary nav" data-target="map-screen">Weiter zur Karte</button>`,
   'map-screen':`<button class="secondary nav" data-target="observation-form">Zur\u00fcck</button><button class="primary" id="confirmLocation">Ort \u00fcbernehmen</button>`,
@@ -541,7 +585,6 @@ const ctas = {
   'export-done':`<button class="secondary nav" data-target="home">Zur \u00dcbersicht</button><button class="primary nav" data-target="new-survey">Neue Erfassung</button>`
 };
 
-// --- Validation ---
 const REQUIRED = [
   { id:'temp',    errId:'tempError' },
   { id:'wind',    errId:'windError' },
@@ -586,7 +629,6 @@ REQUIRED.forEach(({ id, errId }) => {
   });
 });
 
-// --- Helpers ---
 function buildPin(num, x, y, pending=false){
   const pin=document.createElement('div');
   pin.className='pin'+(pending?' pending':'');
