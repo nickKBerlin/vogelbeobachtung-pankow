@@ -1,11 +1,1015 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" data-theme="light">
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0; url=prototyp/vogelbeobachtung-prototyp.html">
-  <title>Vogelbeobachtung Pankow</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vogelbeobachtung Prototyp</title>
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    :root,[data-theme="light"]{
+      --text-xs:clamp(.75rem,.7rem + .25vw,.875rem);
+      --text-sm:clamp(.875rem,.8rem + .35vw,1rem);
+      --text-base:clamp(1rem,.95rem + .25vw,1.125rem);
+      --text-lg:clamp(1.125rem,1rem + .75vw,1.5rem);
+      --text-xl:clamp(1.5rem,1.2rem + 1.25vw,2.25rem);
+      --space-1:.25rem;--space-2:.5rem;--space-3:.75rem;--space-4:1rem;
+      --space-5:1.25rem;--space-6:1.5rem;--space-8:2rem;--space-10:2.5rem;
+      --space-12:3rem;--space-16:4rem;
+      --color-bg:#f7f6f2;--color-surface:#f9f8f5;--color-surface-2:#fbfbf9;
+      --color-surface-offset:#f3f0ec;--color-border:#d4d1ca;--color-divider:#dcd9d5;
+      --color-text:#28251d;--color-text-muted:#6e6d67;--color-text-faint:#9d9b94;
+      --color-primary:#01696f;--color-primary-hover:#0c4e54;--color-primary-highlight:#cedcd8;
+      --color-warning:#964219;--color-warning-bg:#fdf4ed;--color-warning-border:#e8c49a;
+      --color-error:#c0392b;--color-error-bg:#fdf0ee;
+      --color-error-border:#e8b4ae;
+      --radius-sm:.5rem;--radius-md:.75rem;--radius-lg:1rem;--radius-xl:1.25rem;--radius-full:9999px;
+      --shadow-sm:0 1px 2px rgba(0,0,0,.06);--shadow-md:0 10px 30px rgba(0,0,0,.08);
+      --transition:180ms cubic-bezier(.16,1,.3,1);
+      --font-body:'Satoshi',system-ui,sans-serif;
+    }
+    [data-theme="dark"]{
+      --color-bg:#171614;--color-surface:#1c1b19;--color-surface-2:#201f1d;
+      --color-surface-offset:#242320;--color-border:#393836;--color-divider:#2b2926;
+      --color-text:#e0dfdc;--color-text-muted:#a4a29c;--color-text-faint:#7d7a74;
+      --color-primary:#4f98a3;--color-primary-hover:#227f8b;--color-primary-highlight:#313b3b;
+      --color-warning:#c57a54;--color-warning-bg:#2a1e14;--color-warning-border:#6b3d1e;
+      --color-error:#e57060;--color-error-bg:#2a1a18;
+      --color-error-border:#5a2a24;
+      --shadow-sm:0 1px 2px rgba(0,0,0,.25);--shadow-md:0 10px 30px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body)}
+    body{min-height:100vh;font-size:var(--text-base)}
+    button,input,select,textarea{font:inherit;color:inherit}
+    button{cursor:pointer;border:0}
+    .app{max-width:460px;margin:0 auto;min-height:100vh;background:var(--color-bg);position:relative}
+    .topbar{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:var(--space-3);padding:var(--space-4);background:color-mix(in srgb,var(--color-bg) 90%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid color-mix(in srgb,var(--color-border) 70%,transparent)}
+    .topbar h1{font-size:var(--text-sm);margin:0;font-weight:700;letter-spacing:.02em}
+    .grow{flex:1}
+    .icon-btn{width:44px;height:44px;border-radius:var(--radius-full);background:var(--color-surface);border:1px solid color-mix(in srgb,var(--color-border) 80%,transparent);display:inline-flex;align-items:center;justify-content:center;box-shadow:var(--shadow-sm)}
+    .screen{display:none;padding:var(--space-5) var(--space-4) calc(var(--space-16) + 76px)}
+    .screen.active{display:block}
+    .eyebrow{display:inline-flex;align-items:center;gap:var(--space-2);font-size:var(--text-xs);padding:.35rem .65rem;border-radius:var(--radius-full);background:var(--color-primary-highlight);color:var(--color-primary);font-weight:700;letter-spacing:.03em;text-transform:uppercase}
+    .hero{display:grid;gap:var(--space-4);margin-top:var(--space-2)}
+    .hero h2{font-size:var(--text-xl);line-height:1.05;margin:0}
+    .hero p,.muted{color:var(--color-text-muted)}
+    .panel{background:var(--color-surface);border:1px solid color-mix(in srgb,var(--color-border) 80%,transparent);border-radius:var(--radius-xl);padding:var(--space-4);box-shadow:var(--shadow-sm)}
+    .stack{display:grid;gap:var(--space-4)}
+    .field{display:grid;gap:.45rem}
+    .field label{font-size:var(--text-sm);font-weight:700}
+    .field .required-star{color:var(--color-error);margin-left:.2em}
+    .input,select,textarea{width:100%;border-radius:var(--radius-md);border:1px solid var(--color-border);background:var(--color-surface-2);padding:.9rem 1rem;min-height:48px}
+    textarea{min-height:96px;resize:vertical}
+    .input.error,select.error{border-color:var(--color-error)!important;background:var(--color-error-bg)}
+    .field-error{font-size:var(--text-xs);color:var(--color-error);display:none}
+    .field-error.visible{display:block}
+    .validation-banner{background:var(--color-error-bg);border:1px solid var(--color-error-border);border-radius:var(--radius-md);padding:.75rem 1rem;font-size:var(--text-sm);color:var(--color-error);display:none}
+    .validation-banner.visible{display:block}
+    .segmented{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-2)}
+    .segmented button,.chip{min-height:48px;border-radius:var(--radius-md);padding:.8rem 1rem;background:var(--color-surface-2);border:1px solid var(--color-border);font-weight:700}
+    .segmented button.active,.chip.active{background:var(--color-primary-highlight);color:var(--color-primary);border-color:color-mix(in srgb,var(--color-primary) 30%,var(--color-border))}
+    .chip-grid{display:flex;flex-wrap:wrap;gap:.55rem}
+    .chip{min-height:auto;padding:.65rem .9rem;font-size:var(--text-sm)}
+    .primary,.secondary,.ghost{min-height:52px;border-radius:var(--radius-lg);padding:.9rem 1rem;font-weight:700;transition:transform var(--transition),background var(--transition),color var(--transition)}
+    .primary{background:var(--color-primary);color:#fff}
+    .primary:hover{background:var(--color-primary-hover)}
+    .secondary{background:var(--color-surface);border:1px solid var(--color-border)}
+    .ghost{background:transparent;color:var(--color-text-muted)}
+    .btn-row{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3)}
+    .cta{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:min(460px,100%);padding:var(--space-3) var(--space-4) calc(var(--space-3) + env(safe-area-inset-bottom));background:color-mix(in srgb,var(--color-bg) 94%,transparent);backdrop-filter:blur(12px);border-top:1px solid color-mix(in srgb,var(--color-border) 80%,transparent);display:none;gap:var(--space-3)}
+    .cta.active{display:grid}
+    .card-list{display:grid;gap:var(--space-3)}
+    .obs-card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:var(--space-4);display:grid;gap:var(--space-3)}
+    .obs-top{display:flex;justify-content:space-between;gap:var(--space-3);align-items:start}
+    .obs-title{margin:0;font-size:var(--text-base);font-weight:700}
+    .obs-meta{font-size:var(--text-sm);color:var(--color-text-muted)}
+    .badge{display:inline-flex;align-items:center;padding:.35rem .65rem;border-radius:var(--radius-full);background:var(--color-surface-offset);font-size:var(--text-xs);font-weight:700;white-space:nowrap}
+    .obs-edit-btn{display:inline-flex;align-items:center;gap:.3rem;font-size:var(--text-xs);font-weight:700;padding:.4rem .75rem;border-radius:var(--radius-full);background:var(--color-surface-offset);border:1px solid var(--color-border);color:var(--color-text-muted);cursor:pointer;transition:background var(--transition),color var(--transition)}
+    .obs-edit-btn:hover{background:var(--color-primary-highlight);color:var(--color-primary);border-color:color-mix(in srgb,var(--color-primary) 30%,var(--color-border))}
+    .map-card{background:linear-gradient(180deg,color-mix(in srgb,var(--color-primary-highlight) 45%,var(--color-surface-2)),var(--color-surface));border:1px solid var(--color-border);border-radius:var(--radius-xl);padding:var(--space-3);display:grid;gap:var(--space-3)}
+    .map-toolbar{display:flex;justify-content:space-between;align-items:center;gap:var(--space-2)}
+    .map{position:relative;width:100%;aspect-ratio:3/4;border-radius:calc(var(--radius-xl) - var(--space-3));overflow:hidden;background:#ece8df;border:1px solid color-mix(in srgb,var(--color-border) 80%,transparent);cursor:crosshair}
+    .map img.map-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;user-select:none}
+    .pin{position:absolute;transform:translate(-50%,-100%);pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:2px}
+    .pin-circle{width:28px;height:28px;border-radius:50%;background:#1a7d38;border:2.5px solid #fff;box-shadow:0 3px 8px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;font-family:system-ui,sans-serif}
+    .pin-tail{width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:8px solid #1a7d38}
+    .pin.pending .pin-circle{background:#e8a020;border-color:#fff}
+    .pin.pending .pin-tail{border-top-color:#e8a020}
+    .mini-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-3)}
+    .stat{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:var(--space-3)}
+    .stat strong{display:block;font-size:var(--text-lg)}
+    .list-plain{display:grid;gap:var(--space-2)}
+    .list-item{display:flex;justify-content:space-between;gap:var(--space-3);padding:.8rem 0;border-bottom:1px solid var(--color-divider)}
+    .list-item:last-child{border-bottom:0}
+    .preview-sheet{background:white;color:#222;border-radius:var(--radius-lg);padding:var(--space-4);box-shadow:var(--shadow-md);display:grid;gap:var(--space-3)}
+    .preview-sheet h3{margin:0;font-size:1.1rem}
+    .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:var(--radius-sm)}
+    .preview-table{width:100%;min-width:480px;border-collapse:collapse;font-size:.87rem}
+    .preview-table th,.preview-table td{border:1px solid #ddd;padding:.5rem;vertical-align:top;text-align:left}
+    .hint{font-size:var(--text-xs);color:var(--color-text-muted)}
+    .success{background:color-mix(in srgb,var(--color-primary) 10%,var(--color-surface));border:1px solid color-mix(in srgb,var(--color-primary) 25%,var(--color-border))}
+    .hidden{display:none!important}
+    select option:disabled{color:var(--color-text-faint)}
+    .endtime-callout{
+      background:var(--color-warning-bg);
+      border:2px solid var(--color-warning-border);
+      border-radius:var(--radius-xl);
+      padding:var(--space-4);
+      display:grid;
+      gap:var(--space-3);
+      box-shadow:var(--shadow-sm);
+    }
+    .endtime-callout .callout-header{display:flex;align-items:center;gap:var(--space-2)}
+    .endtime-callout .callout-icon{font-size:1.4rem;line-height:1}
+    .endtime-callout .callout-title{font-size:var(--text-base);font-weight:700;color:var(--color-warning);margin:0}
+    .endtime-callout .callout-hint{font-size:var(--text-sm);color:var(--color-text-muted);margin:0}
+    .endtime-callout .input{border-color:var(--color-warning-border);background:var(--color-surface-2);font-size:var(--text-lg);font-weight:700;letter-spacing:.05em}
+    .endtime-callout .input:focus{outline:2px solid var(--color-warning);outline-offset:2px;border-color:var(--color-warning)}
+    @media(min-width:900px){
+      body{padding:var(--space-8)}
+      .app{border-radius:28px;box-shadow:var(--shadow-md);overflow:hidden;min-height:calc(100vh - 4rem)}
+      .cta{bottom:var(--space-8);border:1px solid color-mix(in srgb,var(--color-border) 80%,transparent);border-radius:24px}
+    }
+  </style>
 </head>
 <body>
-  <p>Weiterleitung… <a href="prototyp/vogelbeobachtung-prototyp.html">Hier klicken falls nicht automatisch weitergeleitet.</a></p>
+<div class="app">
+  <div class="topbar">
+    <button class="icon-btn hidden" id="backBtn" aria-label="Zur&uuml;ck">&larr;</button>
+    <h1 id="topTitle">Vogelbeobachtung</h1>
+    <div class="grow"></div>
+    <button class="icon-btn" id="themeToggle" aria-label="Farbschema wechseln">&#9680;</button>
+  </div>
+
+  <!-- SCREEN 1 -->
+  <section class="screen active" data-screen="home">
+    <div class="hero">
+      <span class="eyebrow">Gr&uuml;ner Kiez Pankow</span>
+      <h2>Vogeldokumentation Gr&uuml;ner Kiez Pankow</h2>
+      <p>Beobachtungen schnell erfassen und als PDF exportieren.</p>
+    </div>
+    <div class="stack" style="margin-top:1.5rem">
+      <div class="panel stack">
+        <button class="primary nav" data-target="new-survey">Neue Erfassung</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 2: Kopfdaten -->
+  <section class="screen" data-screen="new-survey">
+    <div class="stack">
+      <div>
+        <span class="eyebrow">Screen 2</span>
+        <h2 style="font-size:var(--text-xl);margin:.75rem 0 .35rem">Neue Erfassung</h2>
+        <p class="muted">Datum, Uhrzeit, Hof, Wetter und Beobachter eingeben.</p>
+      </div>
+      <div id="validationBanner" class="validation-banner">
+        Bitte alle Pflichtfelder ausf&uuml;llen (mit <span style="color:var(--color-error)">*</span> markiert).
+      </div>
+      <div class="panel stack">
+        <div class="field">
+          <label for="date">Datum</label>
+          <input id="date" class="input" type="text" placeholder="TT.MM.JJJJ" maxlength="10" inputmode="numeric" autocomplete="off">
+          <div class="hint">Format: TT.MM.JJJJ &mdash; wird automatisch formatiert</div>
+        </div>
+        <div class="field">
+          <label for="time">Startzeit</label>
+          <input id="time" class="input" type="text" placeholder="HH:MM" maxlength="5" inputmode="numeric" autocomplete="off">
+          <div class="hint">24-Stunden-Format, z.&thinsp;B. 08:30 oder 14:26</div>
+        </div>
+        <div class="field">
+          <label>Hof</label>
+          <div class="segmented" id="courtyardSelect">
+            <button type="button" class="active" data-court="suedhof">S&uuml;dhof</button>
+            <button type="button" data-court="nordhof">Nordhof</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="temp">Temperatur <span class="required-star">*</span></label>
+          <div style="display:flex;gap:.5rem;align-items:center">
+            <input id="temp" class="input" type="number" placeholder="z.&thinsp;B. 16" style="flex:1">
+            <span style="font-weight:700;padding:.9rem .5rem">&deg;C</span>
+          </div>
+          <div class="field-error" id="tempError">Bitte Temperatur eingeben.</div>
+        </div>
+        <div class="field">
+          <label for="wind">Wind <span class="required-star">*</span></label>
+          <select id="wind">
+            <option value="">-- bitte w&auml;hlen --</option>
+            <option>windstill</option>
+            <option>schwach</option>
+            <option>m&auml;&szlig;ig</option>
+            <option>stark</option>
+          </select>
+          <div class="field-error" id="windError">Bitte Windst&auml;rke w&auml;hlen.</div>
+        </div>
+        <div class="field">
+          <label for="weather">Sonne / Niederschlag <span class="required-star">*</span></label>
+          <select id="weather">
+            <option value="">-- bitte w&auml;hlen --</option>
+            <option>sonnig</option>
+            <option>leicht bew&ouml;lkt</option>
+            <option>bew&ouml;lkt</option>
+            <option>Regen</option>
+            <option>wechselhaft</option>
+          </select>
+          <div class="field-error" id="weatherError">Bitte Wetterlage w&auml;hlen.</div>
+        </div>
+        <div class="field">
+          <label for="observer">Erfassung durch <span class="required-star">*</span></label>
+          <input id="observer" class="input" type="text" placeholder="Name oder Gruppe">
+          <div class="field-error" id="observerError">Bitte Namen eingeben.</div>
+        </div>
+        <div class="field">
+          <label for="notes">Besonderheiten / Bemerkungen <span style="color:var(--color-text-muted);font-weight:400">(optional)</span></label>
+          <textarea id="notes" placeholder="z.&thinsp;B. ruhiger Nachmittag, gute Sicht im s&uuml;dlichen Gartenbereich"></textarea>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 3: Übersicht -->
+  <section class="screen" data-screen="survey-overview">
+    <div class="stack">
+      <div>
+        <span class="eyebrow">Screen 3</span>
+        <h2 style="font-size:var(--text-xl);margin:.75rem 0 .35rem">Erfassung vom <span id="overviewDate"></span></h2>
+        <p class="muted"><span id="courtLabel">S&uuml;dhof</span> &middot; <span id="overviewTime"></span> Uhr</p>
+      </div>
+      <div class="mini-stats">
+        <div class="stat"><span class="hint">Beobachtungen</span><strong id="obsCount">0</strong></div>
+        <div class="stat"><span class="hint">Hof</span><strong id="courtLabelMini">S&uuml;dhof</strong></div>
+        <div class="stat"><span class="hint">Temperatur</span><strong id="tempDisplay">&mdash;</strong></div>
+      </div>
+      <div class="panel list-plain">
+        <div class="list-item"><span>Datum</span><strong id="summaryDate"></strong></div>
+        <div class="list-item"><span>Startzeit</span><strong id="summaryTime"></strong></div>
+        <div class="list-item"><span>Wind</span><strong id="summaryWind"></strong></div>
+        <div class="list-item"><span>Sonne / Niederschlag</span><strong id="summaryWeather"></strong></div>
+        <div class="list-item"><span>Erfassung durch</span><strong id="summaryObserver"></strong></div>
+      </div>
+      <div class="map-card">
+        <div class="map-toolbar">
+          <div><strong>Kartierung</strong>
+          <div class="hint">Alle eingetragenen Beobachtungspunkte.</div></div>
+        </div>
+        <div class="map" id="overviewMap"></div>
+      </div>
+      <div class="panel stack">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem">
+          <div>
+            <h3 style="margin:0;font-size:var(--text-lg)">Beobachtungen</h3>
+            <p class="muted" style="margin:.2rem 0 0">Nummerierte Liste aller Eintr&auml;ge.</p>
+          </div>
+          <button class="secondary nav" data-target="observation-form">Hinzuf&uuml;gen</button>
+        </div>
+        <div class="card-list" id="observationList"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 4: Beobachtung -->
+  <section class="screen" data-screen="observation-form">
+    <div class="stack">
+      <div>
+        <span class="eyebrow">Screen 4</span>
+        <h2 id="obsFormTitle" style="font-size:var(--text-xl);margin:.75rem 0 .35rem">Beobachtung hinzuf&uuml;gen</h2>
+        <p class="muted" id="obsFormSubtitle">Art, Anzahl, Geschlecht, Verhalten und Beschreibung eingeben.</p>
+      </div>
+      <div class="panel stack">
+        <div class="field">
+          <label for="species">Art</label>
+          <select id="species">
+            <option value="Am">Am &ndash; Amsel</option>
+            <option value="Bm">Bm &ndash; Blaumeise</option>
+            <option value="Bs">Bs &ndash; Buntspecht</option>
+            <option value="E">E &ndash; Elster</option>
+            <option value="G&uuml;">G&uuml; &ndash; Gr&uuml;nspecht</option>
+            <option value="H">H &ndash; Haussperling</option>
+            <option value="KL">KL &ndash; Kleiber</option>
+            <option value="K">K &ndash; Kohlmeise</option>
+            <option value="Nk">Nk &ndash; Nebelkr&auml;he</option>
+            <option value="Rt">Rt &ndash; Ringeltaube</option>
+            <option value="R">R &ndash; Rotkehlchen</option>
+            <option value="S">S &ndash; Star</option>
+            <option value="Wb">Wb &ndash; Waldbauml&auml;ufer</option>
+            <option value="custom">&#x270F;&#xFE0F; Eigene Angabe &hellip;</option>
+          </select>
+          <input id="speciesCustom" class="input hidden" type="text" placeholder="Art eingeben, z.&thinsp;B. Mauersegler">
+        </div>
+        <div class="btn-row">
+          <div class="field">
+            <label for="count">Anzahl</label>
+            <input id="count" class="input" type="number" value="1" min="1">
+          </div>
+          <div class="field">
+            <label for="sex">Geschlecht</label>
+            <select id="sex">
+              <option>nicht erkannt</option>
+              <option>M&auml;nnchen</option>
+              <option>Weibchen</option>
+              <option id="optPair" disabled>gemischtes Paar</option>
+              <option id="optGroup" disabled>gemischte Gruppe</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Verhalten</label>
+          <div class="chip-grid" id="behaviors">
+            <button type="button" class="chip">Nahrungssuche</button>
+            <button type="button" class="chip">Reviergesang</button>
+            <button type="button" class="chip">Balz</button>
+            <button type="button" class="chip">Warnrufe</button>
+            <button type="button" class="chip">Nestbau</button>
+            <button type="button" class="chip">Brutnachweis</button>
+            <button type="button" class="chip">Flugbewegung</button>
+            <button type="button" class="chip">F&uuml;ttern</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="locationText">Wo beobachtet?</label>
+          <input id="locationText" class="input" type="text" placeholder="z.&thinsp;B. Konzertwiese, Geb&uuml;sch Ossietzkystr. 26">
+        </div>
+        <div class="field">
+          <label for="obsText">Was beobachtet / geh&ouml;rt?</label>
+          <textarea id="obsText" placeholder="z.&thinsp;B. singt, fliegt, pickt Nahrung, balzt"></textarea>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 5: Karte -->
+  <section class="screen" data-screen="map-screen">
+    <div class="stack">
+      <div>
+        <span class="eyebrow">Screen 5</span>
+        <h2 style="font-size:var(--text-xl);margin:.75rem 0 .35rem">Ort auf Karte markieren</h2>
+        <p class="muted">Tippe auf die Karte, um den Beobachtungsort zu setzen. Verschiebbar bis &bdquo;Ort &uuml;bernehmen&ldquo;.</p>
+      </div>
+      <div class="panel stack success">
+        <div><strong>Aktuelle Beobachtung</strong></div>
+        <div class="hint" id="currentObsSummary">&mdash; noch keine Angaben &mdash;</div>
+      </div>
+      <div class="map-card">
+        <div class="map-toolbar">
+          <strong id="mapTitle">S&uuml;dhof-Karte</strong>
+          <span class="badge">Tippen zum Markieren</span>
+        </div>
+        <div class="map" id="interactiveMap"></div>
+        <div class="field">
+          <label for="mapLocationText">Ortsbeschreibung</label>
+          <input id="mapLocationText" class="input" type="text" placeholder="z.&thinsp;B. Konzertwiese, Geb&uuml;sch Ossietzkystr. 26">
+        </div>
+        <div class="field">
+          <label for="movementText">Flugbewegung (optional)</label>
+          <input id="movementText" class="input" type="text" placeholder="z.&thinsp;B. von Kavalierstra&szlig;e 25 Richtung Gartenbereich">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 6: Prüfen -->
+  <section class="screen" data-screen="review-save">
+    <div class="stack">
+      <div>
+        <span class="eyebrow">Screen 6</span>
+        <h2 style="font-size:var(--text-xl);margin:.75rem 0 .35rem">Pr&uuml;fen und speichern</h2>
+        <p class="muted">Zusammenfassung vor dem Speichern.</p>
+      </div>
+      <div class="panel stack" id="reviewPanel"></div>
+    </div>
+  </section>
+
+  <!-- SCREEN 7: PDF-Vorschau -->
+  <section class="screen" data-screen="export-preview">
+    <div class="stack">
+      <div>
+        <span class="eyebrow">Screen 7</span>
+        <h2 style="font-size:var(--text-xl);margin:.75rem 0 .35rem">PDF-Export vorbereiten</h2>
+        <p class="muted">Bitte zuerst Endzeit eintragen, dann Daten pr&uuml;fen.</p>
+      </div>
+      <div class="endtime-callout">
+        <div class="callout-header">
+          <span class="callout-icon">&#9200;</span>
+          <p class="callout-title">Endzeit der Erfassung eintragen</p>
+        </div>
+        <p class="callout-hint">Falls du die App erst zu Hause &ouml;ffnest: Trage hier die genaue Uhrzeit ein, wann ihr die Beobachtung beendet habt &mdash; nicht die aktuelle Zeit.</p>
+        <div class="field">
+          <input id="endTime" class="input" type="text" placeholder="HH:MM" maxlength="5" inputmode="numeric" autocomplete="off">
+          <div class="hint">24-Stunden-Format, z.&thinsp;B. 16:45</div>
+        </div>
+      </div>
+      <div class="preview-sheet">
+        <h3>Vogeldokumentation &bdquo;Gr&uuml;ner Kiez Pankow&ldquo; 2026</h3>
+        <div class="list-plain">
+          <div class="list-item"><span>Datum</span><strong id="pdfDate"></strong></div>
+          <div class="list-item"><span>Startzeit</span><strong id="pdfTime"></strong></div>
+          <div class="list-item"><span>Endzeit</span><strong id="pdfEndTime">&mdash;</strong></div>
+          <div class="list-item"><span>Ort</span><strong id="pdfCourt">S&uuml;dhof</strong></div>
+          <div class="list-item"><span>Temperatur</span><strong id="pdfTemp"></strong></div>
+          <div class="list-item"><span>Wind</span><strong id="pdfWind"></strong></div>
+          <div class="list-item"><span>Sonne / Niederschlag</span><strong id="pdfWeather"></strong></div>
+          <div class="list-item"><span>Erfassung durch</span><strong id="pdfObserver"></strong></div>
+        </div>
+        <div class="table-scroll">
+          <table class="preview-table">
+            <thead>
+              <tr><th>#</th><th>Art</th><th>Anzahl&middot;Geschlecht</th><th>Wo beobachtet?</th><th>Was beobachtet/geh&ouml;rt?</th></tr>
+            </thead>
+            <tbody id="previewRows"></tbody>
+          </table>
+        </div>
+        <div class="hint">+ Kartenanhang mit gr&uuml;nen Nummern wird als letzte Seite angeh&auml;ngt.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 8: Export done -->
+  <section class="screen" data-screen="export-done">
+    <div class="stack">
+      <div>
+        <span class="eyebrow">Screen 8</span>
+        <h2 style="font-size:var(--text-xl);margin:.75rem 0 .35rem">Export abgeschlossen</h2>
+      </div>
+      <div class="panel stack success">
+        <div><strong>PDF wurde heruntergeladen</strong></div>
+        <div class="muted" id="exportFilename">vogeldokumentation.pdf</div>
+        <div class="btn-row">
+          <button class="secondary nav" data-target="home">Zur Startseite</button>
+          <button class="primary nav" data-target="new-survey">Neue Erfassung</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="cta" id="ctaBar"></div>
+</div>
+
+<script>
+const MAP_IMAGES = {
+  suedhof: '2026_Karte_S\u00fcdhof.webp',
+  nordhof: '2026_Karte_Nordhof.webp'
+};
+
+function todayDE() {
+  const n = new Date();
+  return String(n.getDate()).padStart(2,'0')+'.'+String(n.getMonth()+1).padStart(2,'0')+'.'+n.getFullYear();
+}
+function currentTimeHHMM() {
+  const n = new Date();
+  return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
+}
+function deToISO(de) {
+  const p = de.split('.');
+  if (p.length===3 && p[2].length===4) return `${p[2]}-${p[1]}-${p[0]}`;
+  return de;
+}
+
+function setupDateInput(el) {
+  el.addEventListener('input', function() {
+    let v = this.value.replace(/\D/g,'');
+    if (v.length > 2) v = v.slice(0,2)+'.'+v.slice(2);
+    if (v.length > 5) v = v.slice(0,5)+'.'+v.slice(5);
+    if (v.length > 10) v = v.slice(0,10);
+    this.value = v;
+    updateSummaryFields();
+  });
+}
+function setupTimeInput(el) {
+  el.addEventListener('input', function() {
+    let v = this.value.replace(/\D/g,'');
+    if (v.length > 2) v = v.slice(0,2)+':'+v.slice(2);
+    if (v.length > 5) v = v.slice(0,5);
+    this.value = v;
+    updateSummaryFields();
+  });
+}
+
+function updateSexOptions() {
+  const count = parseInt(document.getElementById('count').value, 10);
+  const sex   = document.getElementById('sex');
+  const optPair  = document.getElementById('optPair');
+  const optGroup = document.getElementById('optGroup');
+  const isValid   = Number.isInteger(count) && count >= 1;
+  const pairOk    = isValid && count >= 2 && count % 2 === 0;
+  const groupOk   = isValid && count >= 4;
+  optPair.disabled  = !pairOk;
+  optGroup.disabled = !groupOk;
+  if (!pairOk  && sex.value === 'gemischtes Paar')   sex.value = 'nicht erkannt';
+  if (!groupOk && sex.value === 'gemischte Gruppe')  sex.value = 'nicht erkannt';
+}
+
+function updateSpeciesCustom() {
+  const sel = document.getElementById('species');
+  const inp = document.getElementById('speciesCustom');
+  if (sel.value === 'custom') {
+    inp.classList.remove('hidden');
+    inp.focus();
+  } else {
+    inp.classList.add('hidden');
+    inp.value = '';
+  }
+}
+
+function getSpeciesLabel() {
+  const sel = document.getElementById('species');
+  if (sel.value === 'custom') {
+    const v = document.getElementById('speciesCustom').value.trim();
+    return v || '(Art nicht angegeben)';
+  }
+  return sel.selectedOptions[0].textContent;
+}
+
+const state = {
+  screen: 'home',
+  courtyard: 'suedhof',
+  pendingMarker: null,
+  editingIndex: null,
+  observations: []
+};
+
+const screens = [...document.querySelectorAll('.screen')];
+const topTitle = document.getElementById('topTitle');
+const backBtn  = document.getElementById('backBtn');
+const ctaBar   = document.getElementById('ctaBar');
+
+const titles = {
+  home:'Vogelbeobachtung','new-survey':'Neue Erfassung',
+  'survey-overview':'Erfassung','observation-form':'Beobachtung',
+  'map-screen':'Karte','review-save':'Pr\u00fcfen',
+  'export-preview':'PDF-Vorschau','export-done':'Export'
+};
+const backMap = {
+  'new-survey':'home','survey-overview':'home',
+  'observation-form':'survey-overview','map-screen':'observation-form',
+  'review-save':'map-screen','export-preview':'survey-overview','export-done':'export-preview'
+};
+const ctas = {
+  home:'',
+  'new-survey':`<button class="secondary nav" data-target="home">Abbrechen</button><button class="primary" id="startSurveyBtn">Erfassung starten</button>`,
+  'survey-overview':`<button class="secondary nav" data-target="export-preview">PDF exportieren</button><button class="primary nav" data-target="observation-form">Beobachtung hinzuf\u00fcgen</button>`,
+  'observation-form':`<button class="secondary nav" data-target="survey-overview">Zur\u00fcck</button><button class="primary" id="obsFormNextBtn">Weiter zur Karte</button>`,
+  'map-screen':`<button class="secondary nav" data-target="observation-form">Zur\u00fcck</button><button class="primary" id="confirmLocation">Ort \u00fcbernehmen</button>`,
+  'review-save':`<button class="secondary nav" data-target="map-screen">Ort bearbeiten</button><button class="primary" id="saveObservation">Jetzt speichern</button>`,
+  'export-preview':`<button class="secondary nav" data-target="survey-overview">Zur\u00fcck</button><button class="primary" id="generatePdf">PDF erzeugen</button>`,
+  'export-done':`<button class="secondary nav" data-target="home">Zur \u00dcbersicht</button><button class="primary nav" data-target="new-survey">Neue Erfassung</button>`
+};
+
+const REQUIRED = [
+  { id:'temp',    errId:'tempError' },
+  { id:'wind',    errId:'windError' },
+  { id:'weather', errId:'weatherError' },
+  { id:'observer',errId:'observerError' }
+];
+
+function validateSurveyForm() {
+  let valid = true;
+  REQUIRED.forEach(({ id, errId }) => {
+    const el = document.getElementById(id);
+    const err = document.getElementById(errId);
+    const empty = !el.value.trim();
+    el.classList.toggle('error', empty);
+    if (err) err.classList.toggle('visible', empty);
+    if (empty) valid = false;
+  });
+  const banner = document.getElementById('validationBanner');
+  if (banner) banner.classList.toggle('visible', !valid);
+  return valid;
+}
+
+function clearValidation() {
+  REQUIRED.forEach(({ id, errId }) => {
+    document.getElementById(id)?.classList.remove('error');
+    document.getElementById(errId)?.classList.remove('visible');
+  });
+  document.getElementById('validationBanner')?.classList.remove('visible');
+}
+
+REQUIRED.forEach(({ id, errId }) => {
+  ['input','change'].forEach(evt => {
+    document.getElementById(id)?.addEventListener(evt, () => {
+      const el = document.getElementById(id);
+      if (el.value.trim()) {
+        el.classList.remove('error');
+        document.getElementById(errId)?.classList.remove('visible');
+        const anyLeft = REQUIRED.some(r => !document.getElementById(r.id)?.value.trim());
+        if (!anyLeft) document.getElementById('validationBanner')?.classList.remove('visible');
+      }
+    });
+  });
+});
+
+function buildPin(num, x, y, pending=false){
+  const pin=document.createElement('div');
+  pin.className='pin'+(pending?' pending':'');
+  pin.style.left=x+'%'; pin.style.top=y+'%';
+  pin.innerHTML=`<div class="pin-circle">${num}</div><div class="pin-tail"></div>`;
+  return pin;
+}
+
+function renderOverviewMap(container){
+  container.innerHTML='';
+  const img=document.createElement('img'); img.className='map-bg';
+  img.src=MAP_IMAGES[state.courtyard];
+  img.alt=state.courtyard==='suedhof'?'S\u00fcdhof-Karte':'Nordhof-Karte';
+  container.appendChild(img);
+  state.observations.forEach((obs,i)=>{
+    if(obs.x!=null && obs.y!=null) container.appendChild(buildPin(i+1, obs.x, obs.y));
+  });
+}
+
+function renderInteractiveMap(container){
+  container.innerHTML='';
+  const img=document.createElement('img'); img.className='map-bg';
+  img.src=MAP_IMAGES[state.courtyard];
+  img.alt=state.courtyard==='suedhof'?'S\u00fcdhof-Karte':'Nordhof-Karte';
+  container.appendChild(img);
+  state.observations.forEach((obs,i)=>{
+    if(i === state.editingIndex) return;
+    if(obs.x!=null && obs.y!=null) container.appendChild(buildPin(i+1, obs.x, obs.y));
+  });
+  if(state.pendingMarker)
+    container.appendChild(buildPin(
+      state.editingIndex !== null ? state.editingIndex+1 : state.observations.length+1,
+      state.pendingMarker.x, state.pendingMarker.y, true
+    ));
+  container.onclick=(e)=>{
+    const r=container.getBoundingClientRect();
+    state.pendingMarker={
+      x: Math.max(3,Math.min(97,((e.clientX-r.left)/r.width)*100)),
+      y: Math.max(3,Math.min(97,((e.clientY-r.top)/r.height)*100))
+    };
+    renderInteractiveMap(container);
+  };
+}
+
+function set(id,val){const el=document.getElementById(id);if(el)el.textContent=val;}
+
+function updateSummaryFields(){
+  const dateVal    = document.getElementById('date').value;
+  const timeVal    = document.getElementById('time').value;
+  const tempVal    = document.getElementById('temp').value;
+  const windVal    = document.getElementById('wind').value;
+  const weatherVal = document.getElementById('weather').value;
+  const obsVal     = document.getElementById('observer').value;
+  const endVal     = document.getElementById('endTime')?.value || '';
+
+  set('overviewDate', dateVal); set('summaryDate', dateVal); set('pdfDate', dateVal);
+  set('overviewTime', timeVal); set('summaryTime', timeVal); set('pdfTime', timeVal);
+  set('tempDisplay', tempVal ? tempVal+'\u00b0C' : '\u2014');
+  set('pdfTemp',     tempVal ? tempVal+'\u00b0C' : '\u2014');
+  set('summaryWind', windVal||'\u2014');       set('pdfWind',    windVal||'\u2014');
+  set('summaryWeather', weatherVal||'\u2014'); set('pdfWeather', weatherVal||'\u2014');
+  set('summaryObserver', obsVal||'\u2014');    set('pdfObserver', obsVal||'\u2014');
+  set('pdfEndTime', endVal || '\u2014');
+  const court = state.courtyard==='suedhof'?'S\u00fcdhof':'Nordhof';
+  set('courtLabel',court); set('courtLabelMini',court); set('pdfCourt',court);
+  const isoDate = deToISO(dateVal) || new Date().toISOString().slice(0,10);
+  set('exportFilename',`vogeldokumentation-${isoDate}-${state.courtyard}.pdf`);
+}
+
+function loadObsIntoForm(idx) {
+  const obs = state.observations[idx];
+  state.editingIndex = idx;
+  state.pendingMarker = (obs.x != null && obs.y != null) ? { x: obs.x, y: obs.y } : null;
+
+  const sel = document.getElementById('species');
+  const matchedOpt = [...sel.options].find(o => o.textContent === obs.species && o.value !== 'custom');
+  if (matchedOpt) {
+    sel.value = matchedOpt.value;
+    document.getElementById('speciesCustom').classList.add('hidden');
+    document.getElementById('speciesCustom').value = '';
+  } else {
+    sel.value = 'custom';
+    document.getElementById('speciesCustom').classList.remove('hidden');
+    document.getElementById('speciesCustom').value = obs.species;
+  }
+
+  document.getElementById('count').value = obs.count;
+  updateSexOptions();
+  document.getElementById('sex').value = obs.sex;
+
+  document.querySelectorAll('#behaviors .chip').forEach(chip => {
+    chip.classList.toggle('active', obs.behaviors.includes(chip.textContent.trim()));
+  });
+
+  document.getElementById('locationText').value = obs.location || '';
+  document.getElementById('obsText').value = obs.note || '';
+  const mapLoc = document.getElementById('mapLocationText');
+  if (mapLoc) mapLoc.value = obs.location || '';
+}
+
+function renderObservations(){
+  set('obsCount',String(state.observations.length));
+  const list=document.getElementById('observationList');
+  const rows=document.getElementById('previewRows');
+  if(list) list.innerHTML=state.observations.map((obs,i)=>`
+    <div class="obs-card">
+      <div class="obs-top">
+        <div>
+          <p class="obs-title">${i+1}. ${obs.species}</p>
+          <p class="obs-meta">${obs.count} Ind. &middot; ${obs.sex} &middot; ${obs.location||'\u2014'}</p>
+        </div>
+        <span class="badge">${obs.behaviors[0]||'Beobachtung'}</span>
+      </div>
+      <div class="muted" style="font-size:var(--text-sm)">${obs.note||''}</div>
+      <button class="obs-edit-btn" data-edit-idx="${i}">&#9998; Bearbeiten</button>
+    </div>`).join('');
+
+  list?.querySelectorAll('[data-edit-idx]').forEach(btn => {
+    btn.onclick = () => {
+      const idx = parseInt(btn.dataset.editIdx, 10);
+      loadObsIntoForm(idx);
+      showScreen('observation-form');
+    };
+  });
+
+  if(rows) rows.innerHTML=state.observations.map((obs,i)=>`
+    <tr><td>${i+1}</td><td>${obs.species}</td><td>${obs.count}&middot;${obs.sex}</td>
+    <td>${obs.location||'\u2014'}</td><td>${obs.note||''}</td></tr>`).join('');
+}
+
+function renderReview(){
+  const speciesLabel = getSpeciesLabel();
+  const count=document.getElementById('count').value||'1';
+  const sex=document.getElementById('sex').value;
+  const behaviors=[...document.querySelectorAll('#behaviors .chip.active')].map(el=>el.textContent.trim());
+  const obsText=document.getElementById('obsText').value;
+  const location=document.getElementById('mapLocationText')?.value||document.getElementById('locationText')?.value||'\u2014';
+  const isEdit = state.editingIndex !== null;
+  const pinLabel = state.pendingMarker
+    ? `gesetzt (Nr.${isEdit ? state.editingIndex+1 : state.observations.length+1})`
+    : '\u2014 kein Pin gesetzt';
+  const panel=document.getElementById('reviewPanel');
+  if(panel) panel.innerHTML=`
+    <div class="list-item"><span>Art</span><strong>${speciesLabel}</strong></div>
+    <div class="list-item"><span>Anzahl</span><strong>${count}</strong></div>
+    <div class="list-item"><span>Geschlecht</span><strong>${sex}</strong></div>
+    <div class="list-item"><span>Verhalten</span><strong>${behaviors.join(', ')||'\u2014'}</strong></div>
+    <div class="list-item"><span>Ort</span><strong>${location}</strong></div>
+    <div class="list-item"><span>Kartenpin</span><strong>${pinLabel}</strong></div>
+    <div class="panel" style="background:var(--color-surface-2);margin-top:.5rem">${obsText||'\u2014'}</div>`;
+  const summary=document.getElementById('currentObsSummary');
+  if(summary) summary.textContent=`${speciesLabel} \u00b7 ${count} Ind. \u00b7 ${behaviors.join(', ')||'\u2014'}`;
+}
+
+async function generatePDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  const pw=210, ph=297, mg=14;
+  // jsPDF: y is text baseline. For 8pt font, ascender ~2.8mm above baseline.
+  // Lines must be drawn AFTER advancing y past the text baseline.
+  const rowLineH = 5;   // line height per text row in data cells
+  const hdrTextH = 4;   // visual height of 8pt bold header text (baseline + descender clearance)
+
+  // ── Seite 1: Kopfdaten ──────────────────────────────────────────────────
+  doc.setFont('helvetica','bold'); doc.setFontSize(14);
+  doc.text('Vogeldokumentation \u201eGr\u00fcner Kiez Pankow\u201c 2026', mg, 20);
+  doc.setDrawColor(180); doc.line(mg,23,pw-mg,23);
+  const endVal = document.getElementById('endTime')?.value || '\u2014';
+  const meta=[
+    ['Datum',              document.getElementById('pdfDate').textContent],
+    ['Startzeit',          document.getElementById('pdfTime').textContent+' Uhr'],
+    ['Endzeit',            endVal !== '\u2014' ? endVal+' Uhr' : '\u2014'],
+    ['Ort',                document.getElementById('pdfCourt').textContent],
+    ['Temperatur',         document.getElementById('pdfTemp').textContent],
+    ['Wind',               document.getElementById('pdfWind').textContent],
+    ['Sonne / Niederschlag', document.getElementById('pdfWeather').textContent],
+    ['Erfassung durch',    document.getElementById('pdfObserver').textContent],
+    ['Bemerkungen',        document.getElementById('notes').value||'\u2014'],
+  ];
+  doc.setFontSize(10); let y=30;
+  meta.forEach(([label,val])=>{
+    doc.setFont('helvetica','bold'); doc.text(label+':',mg,y);
+    doc.setFont('helvetica','normal'); doc.text(val,70,y); y+=7;
+  });
+
+  // ── Beobachtungen: direkt nach Metadaten ───────────────────────────────
+  y += 8;
+  doc.setFont('helvetica','bold'); doc.setFontSize(12);
+  doc.text('Beobachtungen', mg, y); y += 5;
+  doc.setDrawColor(180); doc.line(mg, y, pw-mg, y); y += 6;
+
+  // Table header row: draw text, then line BELOW text
+  const colW=[8,42,32,46,pw-2*mg-128];
+  const headers=['#','Art','Anzahl\u00b7Geschlecht','Wo beobachtet?','Was beobachtet/geh\u00f6rt?'];
+  doc.setFontSize(8); doc.setFont('helvetica','bold');
+  let tx=mg;
+  headers.forEach((h,i)=>{ doc.text(h, tx+1, y); tx+=colW[i]; });
+  y += hdrTextH + 1;                          // advance past text baseline + small gap
+  doc.setDrawColor(150); doc.line(mg,y,pw-mg,y);  // separator line BELOW header text
+  y += 3;                                      // gap before first data row
+
+  // Data rows
+  doc.setFont('helvetica','normal'); doc.setFontSize(8);
+  state.observations.forEach((obs,i)=>{
+    // Build location cell: append pin number when no explicit location was typed
+    const rawLoc = obs.location || '';
+    const locCell = (rawLoc === 'Kartierter Punkt' || rawLoc === '')
+      ? `Kartierter Punkt (${i+1})`
+      : rawLoc;
+    const row=[String(i+1), obs.species, obs.count+'\u00b7'+obs.sex, locCell, obs.note||''];
+    tx=mg; let maxLines=1;
+    row.forEach((cell,ci)=>{
+      const l=doc.splitTextToSize(cell,colW[ci]-2);
+      maxLines=Math.max(maxLines,l.length);
+    });
+    if(y + maxLines*rowLineH + 2 > ph - mg){ doc.addPage(); y=18; }
+    tx=mg;
+    row.forEach((cell,ci)=>{
+      doc.splitTextToSize(cell,colW[ci]-2).forEach((ln,li)=>doc.text(ln, tx+1, y+li*rowLineH));
+      tx+=colW[ci];
+    });
+    const lineY = y + maxLines*rowLineH + 1;
+    doc.setDrawColor(210); doc.line(mg, lineY, pw-mg, lineY);
+    y = lineY + 2;
+  });
+
+  // ── Kartenanhang: immer neue Seite ─────────────────────────────────────
+  doc.addPage();
+  doc.setFont('helvetica','bold'); doc.setFontSize(12);
+  const courtName=state.courtyard==='suedhof'?'S\u00fcdhof':'Nordhof';
+  doc.text('Kartierung \u2013 '+courtName, mg, 18);
+  doc.setDrawColor(180); doc.line(mg,22,pw-mg,22);
+  try{
+    const mapDataUrl=await loadImageAsDataURL(MAP_IMAGES[state.courtyard]);
+    const mapX=mg, mapY=26;
+    const fitH=Math.min((pw-2*mg)*(4/3), ph-mapY-mg);
+    const fitW=fitH*(3/4);
+    doc.addImage(mapDataUrl,'WEBP',mapX,mapY,fitW,fitH);
+    state.observations.forEach((obs,i)=>{
+      if(obs.x==null||obs.y==null) return;
+      const px=mapX+(obs.x/100)*fitW, py=mapY+(obs.y/100)*fitH;
+      doc.setFillColor(26,125,56); doc.circle(px,py,4,'F');
+      doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(7);
+      const lbl=String(i+1);
+      doc.text(lbl, px-doc.getTextWidth(lbl)/2, py+2.5);
+      doc.setTextColor(0,0,0);
+    });
+  } catch(err){
+    doc.setFont('helvetica','normal'); doc.setFontSize(10);
+    doc.text('(Kartenbild nicht verf\u00fcgbar)',mg,30);
+    state.observations.forEach((obs,i)=>{
+      if(obs.x!=null) doc.text(`${i+1}. ${obs.species} \u2013 x:${obs.x.toFixed(1)}% y:${obs.y.toFixed(1)}%`,mg,42+i*8);
+    });
+  }
+  const isoDate = deToISO(document.getElementById('date').value) || new Date().toISOString().slice(0,10);
+  doc.save(`vogeldokumentation-${isoDate}-${state.courtyard}.pdf`);
+}
+
+function loadImageAsDataURL(src){
+  return new Promise((resolve,reject)=>{
+    const img=new Image(); img.crossOrigin='anonymous';
+    img.onload=()=>{ const c=document.createElement('canvas'); c.width=img.naturalWidth; c.height=img.naturalHeight; c.getContext('2d').drawImage(img,0,0); resolve(c.toDataURL('image/webp',0.85)); };
+    img.onerror=reject; img.src=src;
+  });
+}
+
+function resetObservationForm() {
+  state.editingIndex = null;
+  state.pendingMarker = null;
+  const speciesSel = document.getElementById('species');
+  speciesSel.selectedIndex = 0;
+  document.getElementById('speciesCustom').classList.add('hidden');
+  document.getElementById('speciesCustom').value = '';
+  document.getElementById('count').value = '1';
+  document.getElementById('sex').value = 'nicht erkannt';
+  updateSexOptions();
+  document.querySelectorAll('#behaviors .chip').forEach(c => c.classList.remove('active'));
+  ['obsText','locationText','mapLocationText','movementText'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value = '';
+  });
+}
+
+function updateObsFormMode() {
+  const isEdit = state.editingIndex !== null;
+  const title    = document.getElementById('obsFormTitle');
+  const subtitle = document.getElementById('obsFormSubtitle');
+  if (title)    title.textContent    = isEdit ? `Beobachtung ${state.editingIndex+1} bearbeiten` : 'Beobachtung hinzuf\u00fcgen';
+  if (subtitle) subtitle.textContent = isEdit ? 'Felder anpassen, dann Karte aktualisieren oder direkt speichern.' : 'Art, Anzahl, Geschlecht, Verhalten und Beschreibung eingeben.';
+}
+
+function showScreen(name){
+  state.screen=name;
+  screens.forEach(s=>s.classList.toggle('active',s.dataset.screen===name));
+  topTitle.textContent=titles[name]||'Vogelbeobachtung';
+  backBtn.classList.toggle('hidden',name==='home');
+  ctaBar.innerHTML=ctas[name]||'';
+  ctaBar.classList.toggle('active',Boolean(ctas[name]));
+  updateSummaryFields();
+  wireButtons();
+  if(name==='survey-overview'){
+    if(state.editingIndex === null) resetObservationForm();
+    renderObservations();
+    renderOverviewMap(document.getElementById('overviewMap'));
+  }
+  if(name==='observation-form'){
+    updateObsFormMode();
+  }
+  if(name==='map-screen'){
+    document.getElementById('mapTitle').textContent=state.courtyard==='suedhof'?'S\u00fcdhof-Karte':'Nordhof-Karte';
+    renderInteractiveMap(document.getElementById('interactiveMap')); renderReview();
+  }
+  if(name==='review-save') renderReview();
+  if(name==='export-preview'){
+    const endEl=document.getElementById('endTime');
+    if(endEl && !endEl.value) endEl.value=currentTimeHHMM();
+    renderObservations(); updateSummaryFields();
+  }
+}
+
+function wireButtons(){
+  document.querySelectorAll('.nav').forEach(btn=>{
+    btn.onclick=()=>{
+      if(state.screen==='observation-form' && btn.dataset.target==='survey-overview'){
+        resetObservationForm();
+      }
+      showScreen(btn.dataset.target);
+    };
+  });
+
+  const startBtn=document.getElementById('startSurveyBtn');
+  if(startBtn) startBtn.onclick=()=>{
+    if(validateSurveyForm()) showScreen('survey-overview');
+    else document.getElementById('validationBanner')?.scrollIntoView({behavior:'smooth',block:'nearest'});
+  };
+
+  const obsNextBtn=document.getElementById('obsFormNextBtn');
+  if(obsNextBtn) obsNextBtn.onclick=()=>showScreen('map-screen');
+
+  const confirmBtn=document.getElementById('confirmLocation');
+  if(confirmBtn) confirmBtn.onclick=()=>showScreen('review-save');
+
+  const saveBtn=document.getElementById('saveObservation');
+  if(saveBtn) saveBtn.onclick=()=>{
+    const updated = {
+      species: getSpeciesLabel(),
+      count: Number(document.getElementById('count').value||1),
+      sex: document.getElementById('sex').value,
+      location: document.getElementById('mapLocationText')?.value||document.getElementById('locationText')?.value||'Kartierter Punkt',
+      behaviors: [...document.querySelectorAll('#behaviors .chip.active')].map(el=>el.textContent.trim()),
+      note: document.getElementById('obsText').value,
+      x: state.pendingMarker?.x??null,
+      y: state.pendingMarker?.y??null
+    };
+    if (state.editingIndex !== null) {
+      state.observations[state.editingIndex] = updated;
+    } else {
+      state.observations.push(updated);
+    }
+    resetObservationForm();
+    renderObservations();
+    showScreen('survey-overview');
+  };
+
+  const pdfBtn=document.getElementById('generatePdf');
+  if(pdfBtn) pdfBtn.onclick=async()=>{
+    pdfBtn.disabled=true; pdfBtn.textContent='Erstelle PDF\u2026';
+    try{ await generatePDF(); showScreen('export-done'); }
+    catch(e){ alert('PDF-Fehler: '+e.message); }
+    finally{ pdfBtn.disabled=false; pdfBtn.textContent='PDF erzeugen'; }
+  };
+}
+
+document.getElementById('themeToggle').addEventListener('click',()=>{
+  const html=document.documentElement;
+  html.setAttribute('data-theme', html.getAttribute('data-theme')==='dark'?'light':'dark');
+});
+document.getElementById('courtyardSelect').addEventListener('click',(e)=>{
+  const btn=e.target.closest('button[data-court]'); if(!btn) return;
+  state.courtyard=btn.dataset.court;
+  [...document.querySelectorAll('#courtyardSelect button')].forEach(b=>b.classList.toggle('active',b===btn));
+  updateSummaryFields();
+});
+document.getElementById('behaviors').addEventListener('click',(e)=>{
+  const chip=e.target.closest('.chip'); if(!chip) return;
+  chip.classList.toggle('active'); renderReview();
+});
+['temp','wind','weather','observer'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el) el.addEventListener('change', updateSummaryFields);
+});
+document.getElementById('species').addEventListener('change', updateSpeciesCustom);
+document.getElementById('speciesCustom').addEventListener('input', renderReview);
+document.getElementById('count').addEventListener('input', () => { updateSexOptions(); renderReview(); });
+backBtn.addEventListener('click',()=>{
+  if(state.screen==='new-survey') clearValidation();
+  if(state.screen==='observation-form') resetObservationForm();
+  showScreen(backMap[state.screen]||'home');
+});
+
+// Init
+setupDateInput(document.getElementById('date'));
+setupTimeInput(document.getElementById('time'));
+setupTimeInput(document.getElementById('endTime'));
+document.getElementById('date').value = todayDE();
+document.getElementById('time').value = currentTimeHHMM();
+updateSexOptions();
+updateSummaryFields();
+renderObservations();
+showScreen('home');
+</script>
 </body>
 </html>
