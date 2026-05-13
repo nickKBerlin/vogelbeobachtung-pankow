@@ -759,6 +759,10 @@ async function generatePDF(){
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
   const pw=210, ph=297, mg=14;
+  // jsPDF: y is text baseline. For 8pt font, ascender ~2.8mm above baseline.
+  // Lines must be drawn AFTER advancing y past the text baseline.
+  const rowLineH = 5;   // line height per text row in data cells
+  const hdrTextH = 4;   // visual height of 8pt bold header text (baseline + descender clearance)
 
   // ── Seite 1: Kopfdaten ──────────────────────────────────────────────────
   doc.setFont('helvetica','bold'); doc.setFontSize(14);
@@ -782,44 +786,56 @@ async function generatePDF(){
     doc.setFont('helvetica','normal'); doc.text(val,70,y); y+=7;
   });
 
-  // ── Beobachtungen: direkt nach Metadaten auf gleicher Seite ────────────
-  // y ist jetzt ~93mm; Tabellen-Header braucht ~18mm Anlauf → passt locker
-  y += 8; // Abstand nach Metadaten
-
+  // ── Beobachtungen: direkt nach Metadaten ───────────────────────────────
+  y += 8;
   doc.setFont('helvetica','bold'); doc.setFontSize(12);
-  doc.text('Beobachtungen', mg, y); y += 4;
-  doc.setDrawColor(180); doc.line(mg, y, pw-mg, y); y += 5;
+  doc.text('Beobachtungen', mg, y); y += 5;
+  doc.setDrawColor(180); doc.line(mg, y, pw-mg, y); y += 6;
 
+  // Table header row: draw text, then line BELOW text
   const colW=[8,42,32,46,pw-2*mg-128];
   const headers=['#','Art','Anzahl\u00b7Geschlecht','Wo beobachtet?','Was beobachtet/geh\u00f6rt?'];
-  let tx=mg;
   doc.setFontSize(8); doc.setFont('helvetica','bold');
-  headers.forEach((h,i)=>{ doc.text(h,tx+1,y); tx+=colW[i]; });
-  y += 2; doc.line(mg,y,pw-mg,y); y += 4;
+  let tx=mg;
+  headers.forEach((h,i)=>{ doc.text(h, tx+1, y); tx+=colW[i]; });
+  y += hdrTextH + 1;                          // advance past text baseline + small gap
+  doc.setDrawColor(150); doc.line(mg,y,pw-mg,y);  // separator line BELOW header text
+  y += 3;                                      // gap before first data row
 
-  doc.setFont('helvetica','normal');
+  // Data rows
+  doc.setFont('helvetica','normal'); doc.setFontSize(8);
   state.observations.forEach((obs,i)=>{
-    const row=[String(i+1),obs.species,obs.count+'\u00b7'+obs.sex,obs.location||'\u2014',obs.note||''];
-    tx=mg; const lineH=5; let maxLines=1;
-    row.forEach((cell,ci)=>{ const l=doc.splitTextToSize(cell,colW[ci]-2); maxLines=Math.max(maxLines,l.length); });
-    if(y+maxLines*lineH > ph-mg){ doc.addPage(); y=18; }
+    // Build location cell: append pin number when no explicit location was typed
+    const rawLoc = obs.location || '';
+    const locCell = (rawLoc === 'Kartierter Punkt' || rawLoc === '')
+      ? `Kartierter Punkt (${i+1})`
+      : rawLoc;
+    const row=[String(i+1), obs.species, obs.count+'\u00b7'+obs.sex, locCell, obs.note||''];
+    tx=mg; let maxLines=1;
+    row.forEach((cell,ci)=>{
+      const l=doc.splitTextToSize(cell,colW[ci]-2);
+      maxLines=Math.max(maxLines,l.length);
+    });
+    if(y + maxLines*rowLineH + 2 > ph - mg){ doc.addPage(); y=18; }
     tx=mg;
     row.forEach((cell,ci)=>{
-      doc.splitTextToSize(cell,colW[ci]-2).forEach((ln,li)=>doc.text(ln,tx+1,y+li*lineH));
+      doc.splitTextToSize(cell,colW[ci]-2).forEach((ln,li)=>doc.text(ln, tx+1, y+li*rowLineH));
       tx+=colW[ci];
     });
-    doc.setDrawColor(220); doc.line(mg,y+maxLines*lineH+1,pw-mg,y+maxLines*lineH+1);
-    y+=maxLines*lineH+3;
+    const lineY = y + maxLines*rowLineH + 1;
+    doc.setDrawColor(210); doc.line(mg, lineY, pw-mg, lineY);
+    y = lineY + 2;
   });
 
   // ── Kartenanhang: immer neue Seite ─────────────────────────────────────
   doc.addPage();
   doc.setFont('helvetica','bold'); doc.setFontSize(12);
   const courtName=state.courtyard==='suedhof'?'S\u00fcdhof':'Nordhof';
-  doc.text('Kartierung \u2013 '+courtName, mg, 18); doc.line(mg,21,pw-mg,21);
+  doc.text('Kartierung \u2013 '+courtName, mg, 18);
+  doc.setDrawColor(180); doc.line(mg,22,pw-mg,22);
   try{
     const mapDataUrl=await loadImageAsDataURL(MAP_IMAGES[state.courtyard]);
-    const mapX=mg, mapY=25;
+    const mapX=mg, mapY=26;
     const fitH=Math.min((pw-2*mg)*(4/3), ph-mapY-mg);
     const fitW=fitH*(3/4);
     doc.addImage(mapDataUrl,'WEBP',mapX,mapY,fitW,fitH);
